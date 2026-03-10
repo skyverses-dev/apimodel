@@ -18,7 +18,15 @@ export function ResellerBalance() {
     { refreshInterval: 60_000 }
   )
 
-  const stats: EzaiStats | null = data && !('error' in data) ? data : null
+  const stats: EzaiStats | null = data && !('error' in data) ? {
+    reseller_balance: data.reseller_balance ?? 0,
+    reseller_quota: data.reseller_quota ?? 0,
+    bonus_multiplier: data.bonus_multiplier ?? 1,
+    total_users: data.total_users ?? 0,
+    total_transactions: data.total_transactions ?? 0,
+    total_topups: data.total_topups ?? 0,
+    total_plan_activations: data.total_plan_activations ?? 0,
+  } : null
 
   return (
     <Card className="bg-white/5 border-white/10 mb-8">
