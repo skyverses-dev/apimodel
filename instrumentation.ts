@@ -42,12 +42,15 @@ async function runMigration() {
 
     await connectDB()
 
-    // Check if already migrated
-    const userCount = await User.countDocuments()
-    if (userCount > 0) {
-        console.log('[Migration] ⏭ Already migrated — skipping')
-        return
-    }
+    // Clear all existing data for fresh migration
+    console.log('[Migration] 🗑️ Clearing existing data...')
+    await Promise.all([
+        User.deleteMany({}),
+        TopupRequest.deleteMany({}),
+        Settings.deleteMany({}),
+        AuditLog.deleteMany({}),
+    ])
+    console.log('[Migration] ✅ All collections cleared')
 
     console.log('[Migration] 🚀 Starting Supabase → MongoDB migration...')
 
