@@ -49,7 +49,7 @@ log "Building Next.js (standalone)..."
 npm run build 2>&1 | tail -5
 success "Build complete"
 
-# Step 4: Copy static + public to standalone
+# Step 4: Copy static + public + messages to standalone
 log "Copying static assets..."
 if [ -d ".next/static" ]; then
   cp -r .next/static .next/standalone/.next/static
@@ -58,6 +58,10 @@ fi
 if [ -d "public" ]; then
   cp -r public .next/standalone/public
   success "Public files copied"
+fi
+if [ -d "messages" ]; then
+  cp -r messages .next/standalone/messages
+  success "i18n messages copied"
 fi
 
 # Step 5: Restart PM2

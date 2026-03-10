@@ -40,6 +40,7 @@ echo "[BUILD] Done"
 echo "[STATIC] Copying assets to standalone..."
 [ -d ".next/static" ] && cp -r .next/static .next/standalone/.next/static
 [ -d "public" ] && cp -r public .next/standalone/public
+[ -d "messages" ] && cp -r messages .next/standalone/messages
 echo "[STATIC] Done"
 
 # Restart
