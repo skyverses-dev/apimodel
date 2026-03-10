@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -29,13 +30,74 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
+
+      // Show loading screen
+      setRedirecting(true)
+
+      // Small delay for smooth transition
+      await new Promise(r => setTimeout(r, 500))
       router.push(`/${locale}/dashboard`)
       router.refresh()
     } catch {
       toast.error(t('auth.loginError'))
-    } finally {
       setLoading(false)
     }
+  }
+
+  // Full-screen loading overlay
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        {/* Animated logo */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 blur-3xl opacity-30 bg-purple-500 rounded-full animate-pulse" />
+          <span className="relative text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+            2brain
+          </span>
+        </div>
+
+        {/* Loading spinner */}
+        <div className="relative w-12 h-12 mb-6">
+          <div className="absolute inset-0 rounded-full border-2 border-purple-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 animate-spin" />
+          <div className="absolute inset-1 rounded-full border-2 border-transparent border-t-pink-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+        </div>
+
+        {/* Loading text */}
+        <p className="text-slate-400 text-sm animate-pulse">
+          Đang tải dashboard...
+        </p>
+
+        {/* Progress dots */}
+        <div className="flex gap-1.5 mt-4">
+          {[0, 1, 2].map(i => (
+            <div
+              key={i}
+              className="w-2 h-2 rounded-full bg-purple-400"
+              style={{
+                animation: 'bounce 1s ease-in-out infinite',
+                animationDelay: `${i * 0.15}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        <style>{`
+          @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-gradient {
+            animation: gradient 2s ease infinite;
+          }
+        `}</style>
+      </div>
+    )
   }
 
   return (
