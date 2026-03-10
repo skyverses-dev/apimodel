@@ -10,6 +10,7 @@ export interface IUser {
     ezai_api_key: string | null
     user_code: string | null
     leverage: number
+    _supabase_id?: string | null
     created_at: Date
     updated_at: Date
 }
@@ -24,6 +25,7 @@ const UserSchema = new Schema<IUser>(
         ezai_api_key: { type: String, default: null },
         user_code: { type: String, default: null },
         leverage: { type: Number, default: 1 },
+        _supabase_id: { type: String, default: null, index: true },
     },
     {
         timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
