@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
         {
-            name: '2brain',
+            name: '2brainv2',
             script: '.next/standalone/server.js',
             cwd: __dirname,
             env: {

@@ -7,7 +7,7 @@
 set -e
 
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_NAME="2brain"
+APP_NAME="2brainv2"
 LOG_FILE="$APP_DIR/logs/deploy.log"
 
 # Colors
