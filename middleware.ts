@@ -1,0 +1,74 @@
+import createMiddleware from 'next-intl/middleware'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+const locales = ['vi', 'en']
+const defaultLocale = 'vi'
+
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'always',
+})
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Skip API routes and static files
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon')
+  ) {
+    return NextResponse.next()
+  }
+
+  // Handle i18n routing
+  const intlResponse = intlMiddleware(request)
+
+  // Refresh Supabase session
+  const response = intlResponse || NextResponse.next()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const localeSegment = locales.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`)
+  const pathWithoutLocale = localeSegment
+    ? pathname.slice(localeSegment.length + 1) || '/'
+    : pathname
+
+  // Protect dashboard and admin routes
+  if (pathWithoutLocale.startsWith('/dashboard') || pathWithoutLocale.startsWith('/admin')) {
+    if (!user) {
+      const loginUrl = new URL(`/${localeSegment || defaultLocale}/auth/login`, request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // Redirect logged-in users away from auth pages
+  if (pathWithoutLocale.startsWith('/auth/') && user) {
+    return NextResponse.redirect(new URL(`/${localeSegment || defaultLocale}/dashboard`, request.url))
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+}
