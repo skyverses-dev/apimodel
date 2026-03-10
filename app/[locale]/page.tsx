@@ -1,16 +1,49 @@
+'use client'
+
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 export default function LandingPage() {
   const t = useTranslations()
   const locale = useLocale()
+  const router = useRouter()
+  const [navigating, setNavigating] = useState<string | null>(null)
+
+  function handleNavigate(href: string, label: string) {
+    setNavigating(label)
+    // Brief delay for animation to show, then navigate
+    setTimeout(() => {
+      router.push(href)
+    }, 300)
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+
+      {/* Page transition overlay */}
+      <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 transition-all duration-500 ${navigating ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}>
+        <div className="relative mb-6">
+          <div className="absolute inset-0 blur-3xl opacity-40 bg-purple-500 rounded-full animate-pulse" />
+          <span className="relative text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-[gradient_2s_ease_infinite]">
+            2brain
+          </span>
+        </div>
+        <div className="relative w-10 h-10 mb-4">
+          <div className="absolute inset-0 rounded-full border-2 border-purple-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 animate-spin" />
+        </div>
+        <p className="text-slate-400 text-sm animate-pulse">
+          {navigating === 'register' ? 'Đang mở trang đăng ký...' : 'Đang mở trang đăng nhập...'}
+        </p>
+      </div>
+
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto animate-[fadeDown_0.6s_ease-out]">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             2brain
@@ -18,41 +51,46 @@ export default function LandingPage() {
           <Badge variant="secondary" className="text-xs">Beta</Badge>
         </div>
         <div className="flex gap-3">
-          <Link href={`/${locale}/auth/login`}>
-            <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-              {t('auth.login')}
-            </Button>
-          </Link>
-          <Link href={`/${locale}/auth/register`}>
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              {t('auth.register')}
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            className="text-white hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105"
+            onClick={() => handleNavigate(`/${locale}/auth/login`, 'login')}
+          >
+            {t('auth.login')}
+          </Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
+            onClick={() => handleNavigate(`/${locale}/auth/register`, 'register')}
+          >
+            {t('auth.register')}
+          </Button>
         </div>
       </nav>
 
       {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 pt-24 pb-16 text-center">
-        <Badge className="mb-6 bg-purple-500/20 text-purple-300 border-purple-500/30">
+        <Badge className="mb-6 bg-purple-500/20 text-purple-300 border-purple-500/30 animate-[fadeUp_0.5s_ease-out]">
           🚀 Powered by EzAI
         </Badge>
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-[fadeUp_0.6s_ease-out]">
           AI Credits{' '}
           <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             dễ dàng
           </span>
         </h1>
-        <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+        <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto animate-[fadeUp_0.7s_ease-out]">
           Nạp tiền qua QR code, nhận credit AI tức thì. Hỗ trợ Claude, GPT-4, Gemini và hơn 50 mô hình AI.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href={`/${locale}/auth/register`}>
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-lg px-8 py-6">
-              Bắt đầu ngay — Miễn phí
-            </Button>
-          </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-[fadeUp_0.8s_ease-out]">
+          <Button
+            size="lg"
+            className="bg-purple-600 hover:bg-purple-700 text-lg px-8 py-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/30 active:scale-95"
+            onClick={() => handleNavigate(`/${locale}/auth/register`, 'register')}
+          >
+            Bắt đầu ngay — Miễn phí
+          </Button>
           <Link href={`/${locale}/dashboard/docs`}>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-white/20 text-white hover:bg-white/10">
+            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-white/20 text-white hover:bg-white/10 transition-all duration-300 hover:scale-105 active:scale-95">
               Xem tài liệu
             </Button>
           </Link>
@@ -62,11 +100,15 @@ export default function LandingPage() {
       {/* Features */}
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-3 gap-8">
         {[
-          { icon: '⚡', title: 'Nạp tiền nhanh', desc: 'QR VietQR — chuyển khoản xác nhận trong vài phút' },
-          { icon: '🤖', title: '50+ AI Models', desc: 'Claude, GPT-4o, Gemini, Llama và nhiều mô hình khác' },
-          { icon: '💰', title: 'Giá tốt nhất', desc: '1 USD nạp vào = 30 USD credit. Tiết kiệm 2x so với trực tiếp' },
+          { icon: '⚡', title: 'Nạp tiền nhanh', desc: 'QR VietQR — chuyển khoản xác nhận trong vài phút', delay: '0s' },
+          { icon: '🤖', title: '50+ AI Models', desc: 'Claude, GPT-4o, Gemini, Llama và nhiều mô hình khác', delay: '0.1s' },
+          { icon: '💰', title: 'Giá tốt nhất', desc: '1 USD nạp vào = 30 USD credit. Tiết kiệm 2x so với trực tiếp', delay: '0.2s' },
         ].map((f) => (
-          <div key={f.title} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors">
+          <div
+            key={f.title}
+            className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5"
+            style={{ animation: `fadeUp 0.6s ease-out ${f.delay} both` }}
+          >
             <div className="text-4xl mb-4">{f.icon}</div>
             <h3 className="text-xl font-semibold mb-2">{f.title}</h3>
             <p className="text-slate-400">{f.desc}</p>
@@ -79,13 +121,13 @@ export default function LandingPage() {
         <h2 className="text-3xl font-bold mb-4">Bảng giá</h2>
         <p className="text-slate-400 mb-10">Tỷ giá: 1 USD = 26,000 VND</p>
         <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 transition-all duration-300 hover:scale-[1.02] hover:bg-white/[0.07]">
             <h3 className="text-xl font-bold mb-2">Pay-as-you-go</h3>
             <div className="text-4xl font-bold text-purple-400 my-4">x30</div>
             <p className="text-slate-400">100,000 VND → $3.84 USD credit</p>
             <p className="text-slate-400 text-sm mt-2">Không hết hạn, dùng khi cần</p>
           </div>
-          <div className="bg-purple-600/20 border border-purple-500/50 rounded-2xl p-8">
+          <div className="bg-purple-600/20 border border-purple-500/50 rounded-2xl p-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20">
             <h3 className="text-xl font-bold mb-2">Monthly Plan</h3>
             <div className="text-4xl font-bold text-pink-400 my-4">Starter+</div>
             <p className="text-slate-400">Từ $2/tháng — Daily limit cao hơn</p>
@@ -98,6 +140,22 @@ export default function LandingPage() {
       <footer className="border-t border-white/10 py-8 text-center text-slate-500">
         <p>© 2026 2brain. All rights reserved.</p>
       </footer>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </div>
   )
 }
