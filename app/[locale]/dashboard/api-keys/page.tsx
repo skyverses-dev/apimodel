@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { User } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { getTranslations } from 'next-intl/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,12 +11,11 @@ import { aiBaseUrl } from '@/lib/config'
 
 export default async function ApiKeysPage() {
   const t = await getTranslations()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
-  const { data: profile } = await admin.from('rb_users').select('*').eq('id', user.id).single()
+  await connectDB()
+  const profile = await User.findById(session.userId).lean()
 
   const baseUrl = aiBaseUrl
 
@@ -31,7 +31,6 @@ export default async function ApiKeysPage() {
         apiKey = activeKey.full_key
         isActive = true
       } else if (ezaiUser.api_keys && ezaiUser.api_keys.length > 0) {
-        // Has keys but none active
         apiKey = ezaiUser.api_keys[0].full_key
         isActive = ezaiUser.api_keys[0].is_active === 1
       }
@@ -101,11 +100,10 @@ export default async function ApiKeysPage() {
               <CardTitle className="text-white">{t('apiKeys.howToUse')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Python */}
               <div>
                 <Badge className="mb-2 bg-blue-600/20 text-blue-300">Python</Badge>
                 <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
-{`from openai import OpenAI
+                  {`from openai import OpenAI
 
 client = OpenAI(
     api_key="${apiKey.slice(0, 10)}...",
@@ -119,12 +117,10 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)`}
                 </pre>
               </div>
-
-              {/* Node.js */}
               <div>
                 <Badge className="mb-2 bg-yellow-600/20 text-yellow-300">Node.js</Badge>
                 <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
-{`import OpenAI from 'openai'
+                  {`import OpenAI from 'openai'
 
 const client = new OpenAI({
   apiKey: '${apiKey.slice(0, 10)}...',
@@ -138,12 +134,10 @@ const res = await client.chat.completions.create({
 console.log(res.choices[0].message.content)`}
                 </pre>
               </div>
-
-              {/* curl */}
               <div>
                 <Badge className="mb-2 bg-green-600/20 text-green-300">cURL</Badge>
                 <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
-{`curl ${apiKeyDisplay}/v1/chat/completions \\
+                  {`curl ${apiKeyDisplay}/v1/chat/completions \\
   -H "Authorization: Bearer ${apiKey.slice(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '{

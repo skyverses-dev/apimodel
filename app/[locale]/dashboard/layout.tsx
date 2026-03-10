@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { getSession } from '@/lib/auth'
+import connectDB from '@/lib/db/mongodb'
+import { User } from '@/lib/db/models'
 import Sidebar from '@/components/layout/Sidebar'
 import { RbUser } from '@/types'
 
@@ -12,37 +13,33 @@ export default async function DashboardLayout({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getSession()
 
-  if (!user) redirect(`/${locale}/auth/login`)
+  if (!session) redirect(`/${locale}/auth/login`)
 
-  // Get or create rb_users profile
-  const admin = createAdminClient()
-  let { data: profile } = await admin
-    .from('rb_users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  await connectDB()
+  let profile = await User.findById(session.userId).lean()
 
   if (!profile) {
-    const { data: newProfile } = await admin
-      .from('rb_users')
-      .insert({
-        id: user.id,
-        role: 'user',
-        name: user.user_metadata?.name || user.email?.split('@')[0],
-      })
-      .select()
-      .single()
-    profile = newProfile
+    // Shouldn't happen if JWT is valid, but just in case
+    redirect(`/${locale}/auth/login`)
   }
 
-  if (!profile) redirect(`/${locale}/auth/login`)
+  const rbUser: RbUser = {
+    id: profile._id.toString(),
+    role: profile.role,
+    name: profile.name,
+    ezai_user_id: profile.ezai_user_id,
+    ezai_api_key: profile.ezai_api_key,
+    user_code: profile.user_code,
+    leverage: profile.leverage,
+    created_at: profile.created_at.toISOString(),
+    updated_at: profile.updated_at.toISOString(),
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-white">
-      <Sidebar user={profile as RbUser} email={user.email || ''} />
+      <Sidebar user={rbUser} email={session.email} />
       <main className="flex-1 overflow-auto">
         {children}
       </main>

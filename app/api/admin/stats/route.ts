@@ -1,58 +1,43 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { User } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { ezai } from '@/lib/ezai/client'
 import { AdminUserStat } from '@/types'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const admin = createAdminClient()
-    const { data: adminProfile } = await admin
-      .from('rb_users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    await connectDB()
+    const adminProfile = await User.findById(session.userId).select('role').lean()
     if (adminProfile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const [rbUsersResult, ezaiUsersResult, authUsersResult] = await Promise.allSettled([
-      admin
-        .from('rb_users')
-        .select('id, name, ezai_user_id')
-        .not('ezai_user_id', 'is', null)
-        .order('created_at', { ascending: false }),
+    const [rbUsers, ezaiUsersResult] = await Promise.allSettled([
+      User.find({ ezai_user_id: { $ne: null } })
+        .select('_id name email ezai_user_id')
+        .sort({ created_at: -1 })
+        .lean(),
       ezai.listUsers(1, 100),
-      admin.auth.admin.listUsers({ perPage: 1000 }),
     ])
 
-    const rbUsers = rbUsersResult.status === 'fulfilled' ? (rbUsersResult.value.data ?? []) : []
+    const users = rbUsers.status === 'fulfilled' ? rbUsers.value : []
     const ezaiUsers = ezaiUsersResult.status === 'fulfilled' ? ezaiUsersResult.value.users : []
-    const authUsers = authUsersResult.status === 'fulfilled' ? (authUsersResult.value.data?.users ?? []) : []
 
-    // Build email map from auth users
-    const emailMap: Record<string, string> = {}
-    authUsers.forEach((au) => {
-      if (au.id && au.email) emailMap[au.id] = au.email
-    })
-
-    // Build EzAI data map by ezai_user_id
+    // Build EzAI data map
     const ezaiMap: Record<string, typeof ezaiUsers[0]> = {}
-    ezaiUsers.forEach((eu) => {
-      ezaiMap[eu.id] = eu
-    })
+    ezaiUsers.forEach((eu) => { ezaiMap[eu.id] = eu })
 
     // Merge
-    const stats: AdminUserStat[] = rbUsers.map((rb) => {
+    const stats: AdminUserStat[] = users.map((rb) => {
       const ezaiData = rb.ezai_user_id ? ezaiMap[rb.ezai_user_id] : null
       return {
-        rb_user_id: rb.id,
+        rb_user_id: rb._id.toString(),
         name: rb.name,
-        email: emailMap[rb.id] ?? '',
+        email: rb.email,
         ezai_user_id: rb.ezai_user_id,
         balance: ezaiData?.balance ?? 0,
         plan_type: ezaiData?.plan_type ?? 'none',
@@ -62,7 +47,6 @@ export async function GET() {
       }
     })
 
-    // Sort by daily_used desc
     stats.sort((a, b) => b.daily_used - a.daily_used)
 
     return NextResponse.json({ stats, total: stats.length })

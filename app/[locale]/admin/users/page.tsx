@@ -1,30 +1,25 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { User } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { Card, CardContent } from '@/components/ui/card'
 import UsersTable from './UsersTable'
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
+  await connectDB()
 
-  // Get all users + their emails from auth
-  const { data: profiles } = await admin
-    .from('rb_users')
-    .select('*')
-    .eq('role', 'user')
-    .order('created_at', { ascending: false })
+  const profiles = await User.find({ role: 'user' })
+    .sort({ created_at: -1 })
+    .lean()
 
-  // Get emails from auth.users
-  const { data: { users: authUsers } } = await admin.auth.admin.listUsers()
-  const emailMap: Record<string, string> = {}
-  authUsers?.forEach(u => { emailMap[u.id] = u.email || '' })
-
-  const usersWithEmail = (profiles || []).map(p => ({
+  const usersWithEmail = profiles.map(p => ({
     ...p,
-    email: emailMap[p.id] || '',
+    id: p._id.toString(),
+    email: p.email,
+    created_at: p.created_at.toISOString(),
+    updated_at: p.updated_at.toISOString(),
   }))
 
   return (

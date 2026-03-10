@@ -1,23 +1,21 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { TopupRequest } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { formatVND, formatUSD } from '@/lib/utils/currency'
 import { getTranslations, getLocale } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default async function TransactionsPage() {
   const t = await getTranslations()
   const locale = await getLocale()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
-  const { data: topups } = await admin
-    .from('rb_topup_requests')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  await connectDB()
+  const topups = await TopupRequest.find({ user_id: session.userId })
+    .sort({ created_at: -1 })
+    .lean()
 
   const statusBadge = (status: string) => {
     if (status === 'approved') return <Badge className="bg-green-600/20 text-green-300 border-green-500/30">{t('topup.approved')}</Badge>
@@ -32,7 +30,7 @@ export default async function TransactionsPage() {
 
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0">
-          {!topups || topups.length === 0 ? (
+          {topups.length === 0 ? (
             <div className="text-center py-16 text-slate-400">{t('transactions.empty')}</div>
           ) : (
             <div className="overflow-x-auto">
@@ -46,7 +44,7 @@ export default async function TransactionsPage() {
                 </thead>
                 <tbody>
                   {topups.map((row) => (
-                    <tr key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={row._id.toString()} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 text-sm text-slate-300">
                         {new Date(row.created_at).toLocaleString(locale)}
                       </td>

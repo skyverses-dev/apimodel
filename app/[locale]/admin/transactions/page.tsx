@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { TopupRequest, User } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { formatVND, formatUSD } from '@/lib/utils/currency'
 import { getLocale } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
@@ -7,19 +8,18 @@ import { Card, CardContent } from '@/components/ui/card'
 
 export default async function AdminTransactionsPage() {
   const locale = await getLocale()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
+  await connectDB()
 
-  const [{ data: topups }, { data: users }] = await Promise.all([
-    admin.from('rb_topup_requests').select('*').order('created_at', { ascending: false }),
-    admin.from('rb_users').select('id, name').eq('role', 'user'),
+  const [topups, users] = await Promise.all([
+    TopupRequest.find().sort({ created_at: -1 }).lean(),
+    User.find({ role: 'user' }).select('_id name').lean(),
   ])
 
   const userMap: Record<string, string> = {}
-  users?.forEach(u => { userMap[u.id] = u.name || u.id.slice(0, 8) })
+  users.forEach(u => { userMap[u._id.toString()] = u.name || u._id.toString().slice(0, 8) })
 
   return (
     <div className="p-8">
@@ -28,7 +28,7 @@ export default async function AdminTransactionsPage() {
 
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0">
-          {!topups || topups.length === 0 ? (
+          {topups.length === 0 ? (
             <div className="text-center py-16 text-slate-400">Chưa có giao dịch nào</div>
           ) : (
             <div className="overflow-x-auto">
@@ -42,12 +42,12 @@ export default async function AdminTransactionsPage() {
                 </thead>
                 <tbody>
                   {topups.map((row) => (
-                    <tr key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={row._id.toString()} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 text-sm text-slate-300 whitespace-nowrap">
                         {new Date(row.created_at).toLocaleString(locale)}
                       </td>
                       <td className="px-6 py-4 text-sm text-white">
-                        {userMap[row.user_id] || row.user_id.slice(0, 8)}
+                        {userMap[row.user_id.toString()] || row.user_id.toString().slice(0, 8)}
                       </td>
                       <td className="px-6 py-4 text-sm text-white font-medium">{formatVND(row.vnd_amount)}</td>
                       <td className="px-6 py-4 text-sm text-slate-300">{formatUSD(row.usd_amount)}</td>

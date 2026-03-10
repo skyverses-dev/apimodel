@@ -86,7 +86,7 @@ success "PM2 config saved"
 echo ""
 echo -e "${GREEN}══════════════════════════════════════${NC}"
 echo -e "${GREEN}   ✅ Deployment complete!${NC}"
-echo -e "${GREEN}   📍 http://localhost:3611${NC}"
+echo -e "${GREEN}   📍 http://localhost:3612${NC}"
 echo -e "${GREEN}══════════════════════════════════════${NC}"
 echo ""
 

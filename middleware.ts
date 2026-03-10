@@ -1,9 +1,10 @@
 import createMiddleware from 'next-intl/middleware'
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { verifyToken } from '@/lib/auth/jwt'
 
 const locales = ['vi', 'en']
 const defaultLocale = 'vi'
+const COOKIE_NAME = '2brain_token'
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -25,27 +26,11 @@ export async function middleware(request: NextRequest) {
 
   // Handle i18n routing
   const intlResponse = intlMiddleware(request)
-
-  // Refresh Supabase session
   const response = intlResponse || NextResponse.next()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
+  // Get JWT from cookie
+  const token = request.cookies.get(COOKIE_NAME)?.value
+  const user = token ? await verifyToken(token) : null
 
   const localeSegment = locales.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`)
   const pathWithoutLocale = localeSegment

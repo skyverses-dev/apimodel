@@ -1,42 +1,31 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { formatVND } from '@/lib/utils/currency'
-import { getTranslations } from 'next-intl/server'
+import connectDB from '@/lib/db/mongodb'
+import { User, TopupRequest, Settings } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Clock, CheckCircle, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { AdminUsageTable } from '@/components/dashboard/AdminUsageTable'
 import { ResellerBalance } from '@/components/dashboard/ResellerBalance'
+import { formatVND } from '@/lib/utils/currency'
 
 export default async function AdminPage() {
-  const t = await getTranslations()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
+  await connectDB()
 
-  const [
-    { count: totalUsers },
-    { count: pendingCount },
-    { count: approvedCount },
-    { data: recentTopups },
-    { data: settingsRows },
-  ] = await Promise.all([
-    admin.from('rb_users').select('*', { count: 'exact', head: true }).eq('role', 'user'),
-    admin.from('rb_topup_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    admin.from('rb_topup_requests').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-    admin.from('rb_topup_requests').select('*').order('created_at', { ascending: false }).limit(5),
-    admin.from('rb_settings').select('*'),
+  const [totalUsers, pendingCount, approvedCount, recentTopups, settings] = await Promise.all([
+    User.countDocuments({ role: 'user' }),
+    TopupRequest.countDocuments({ status: 'pending' }),
+    TopupRequest.countDocuments({ status: 'approved' }),
+    TopupRequest.find().sort({ created_at: -1 }).limit(5).lean(),
+    Settings.findOne().lean(),
   ])
-
-  const settings: Record<string, string> = {}
-  settingsRows?.forEach(r => { settings[r.key] = r.value })
 
   const stats = [
     {
       label: 'Tổng người dùng',
-      value: totalUsers || 0,
+      value: totalUsers,
       icon: Users,
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
@@ -44,7 +33,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Chờ duyệt',
-      value: pendingCount || 0,
+      value: pendingCount,
       icon: Clock,
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10',
@@ -52,7 +41,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Đã duyệt',
-      value: approvedCount || 0,
+      value: approvedCount,
       icon: CheckCircle,
       color: 'text-green-400',
       bg: 'bg-green-500/10',
@@ -60,7 +49,7 @@ export default async function AdminPage() {
     },
     {
       label: 'Tỷ giá hiện tại',
-      value: `1 USD = ${Number(settings.exchange_rate || 26000).toLocaleString('vi-VN')} VND`,
+      value: `1 USD = ${Number(settings?.exchange_rate || 26000).toLocaleString('vi-VN')} VND`,
       icon: TrendingUp,
       color: 'text-purple-400',
       bg: 'bg-purple-500/10',
@@ -105,20 +94,19 @@ export default async function AdminPage() {
             </Link>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!recentTopups || recentTopups.length === 0 ? (
+            {recentTopups.length === 0 ? (
               <p className="text-slate-500 text-sm text-center py-4">Chưa có yêu cầu nào</p>
             ) : (
               recentTopups.map((topup) => (
-                <div key={topup.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div key={topup._id.toString()} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                   <div>
                     <p className="text-white text-sm font-medium">{formatVND(topup.vnd_amount)}</p>
                     <p className="text-slate-400 text-xs">{topup.transfer_content}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    topup.status === 'approved' ? 'bg-green-500/20 text-green-300' :
-                    topup.status === 'rejected' ? 'bg-red-500/20 text-red-300' :
-                    'bg-yellow-500/20 text-yellow-300'
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${topup.status === 'approved' ? 'bg-green-500/20 text-green-300' :
+                      topup.status === 'rejected' ? 'bg-red-500/20 text-red-300' :
+                        'bg-yellow-500/20 text-yellow-300'
+                    }`}>
                     {topup.status}
                   </span>
                 </div>
@@ -134,8 +122,8 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {[
-              { label: 'Duyệt nạp tiền', desc: `${pendingCount || 0} yêu cầu đang chờ`, href: '/admin/topups', color: 'text-yellow-400', icon: Clock },
-              { label: 'Quản lý users', desc: `${totalUsers || 0} người dùng`, href: '/admin/users', color: 'text-blue-400', icon: Users },
+              { label: 'Duyệt nạp tiền', desc: `${pendingCount} yêu cầu đang chờ`, href: '/admin/topups', color: 'text-yellow-400', icon: Clock },
+              { label: 'Quản lý users', desc: `${totalUsers} người dùng`, href: '/admin/users', color: 'text-blue-400', icon: Users },
               { label: 'Cài đặt hệ thống', desc: 'Tỷ giá, đòn bẩy, ngân hàng', href: '/admin/settings', color: 'text-purple-400', icon: TrendingUp },
             ].map((action) => (
               <Link key={action.label} href={action.href}>

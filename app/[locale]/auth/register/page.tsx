@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,11 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function RegisterPage() {
   const t = useTranslations()
   const locale = useLocale()
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
@@ -27,36 +27,23 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { name } },
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
       })
-      if (error) throw error
-      setDone(true)
-      toast.success(t('auth.registerSuccess'))
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      toast.success('Đăng ký thành công!')
+      router.push(`/${locale}/dashboard`)
+      router.refresh()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Lỗi đăng ký'
       toast.error(msg)
     } finally {
       setLoading(false)
     }
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <Card className="border-white/10 bg-white/5 backdrop-blur text-white max-w-md w-full text-center p-8">
-          <div className="text-5xl mb-4">📧</div>
-          <h2 className="text-2xl font-bold mb-2">Kiểm tra email!</h2>
-          <p className="text-slate-400 mb-6">{t('auth.registerSuccess')}</p>
-          <Link href={`/${locale}/auth/login`}>
-            <Button className="bg-purple-600 hover:bg-purple-700">{t('auth.login')}</Button>
-          </Link>
-        </Card>
-      </div>
-    )
   }
 
   return (

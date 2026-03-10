@@ -1,25 +1,35 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import connectDB from '@/lib/db/mongodb'
+import { TopupRequest, User } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
+import { Card, CardContent } from '@/components/ui/card'
 import TopupsTable from './TopupsTable'
 
 export default async function AdminTopupsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
+  await connectDB()
 
-  const [{ data: topups }, { data: users }] = await Promise.all([
-    admin.from('rb_topup_requests').select('*').order('created_at', { ascending: false }),
-    admin.from('rb_users').select('id, name').eq('role', 'user'),
+  const [topups, users] = await Promise.all([
+    TopupRequest.find().sort({ created_at: -1 }).lean(),
+    User.find({ role: 'user' }).select('_id name').lean(),
   ])
 
-  // Build user ID → name map
   const userMap: Record<string, string> = {}
-  users?.forEach(u => { userMap[u.id] = u.name || u.id.slice(0, 8) })
+  users.forEach(u => { userMap[u._id.toString()] = u.name || u._id.toString().slice(0, 8) })
 
-  const pendingCount = topups?.filter(t => t.status === 'pending').length || 0
+  const serializedTopups = topups.map(t => ({
+    ...t,
+    id: t._id.toString(),
+    _id: t._id.toString(),
+    user_id: t.user_id.toString(),
+    approved_by: t.approved_by?.toString() || null,
+    created_at: t.created_at.toISOString(),
+    updated_at: t.updated_at.toISOString(),
+    approved_at: t.approved_at?.toISOString() || null,
+  }))
+
+  const pendingCount = topups.filter(t => t.status === 'pending').length
 
   return (
     <div className="p-8">
@@ -36,7 +46,7 @@ export default async function AdminTopupsPage() {
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0 pt-4 px-4">
           <TopupsTable
-            initialTopups={topups || []}
+            initialTopups={serializedTopups}
             userMap={userMap}
           />
         </CardContent>

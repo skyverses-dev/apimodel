@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { User, TopupRequest } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { formatUSD, formatVND } from '@/lib/utils/currency'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -12,32 +13,29 @@ import { LiveStats } from '@/components/dashboard/LiveStats'
 export default async function DashboardPage() {
   const t = await getTranslations()
   const locale = await getLocale()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
 
-  const admin = createAdminClient()
-  const { data: profile } = await admin.from('rb_users').select('*').eq('id', user.id).single()
+  await connectDB()
+  const profile = await User.findById(session.userId).lean()
 
   // Fetch topup stats from DB
-  const { data: topups } = await admin
-    .from('rb_topup_requests')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  const topups = await TopupRequest.find({ user_id: session.userId })
+    .sort({ created_at: -1 })
+    .lean()
 
-  const approved = topups?.filter(t => t.status === 'approved') || []
-  const pending = topups?.filter(t => t.status === 'pending') || []
+  const approved = topups.filter(t => t.status === 'approved')
+  const pending = topups.filter(t => t.status === 'pending')
   const totalCredit = approved.reduce((s, t) => s + Number(t.credit_amount), 0)
   const totalVND = approved.reduce((s, t) => s + Number(t.vnd_amount), 0)
 
-  const recent = topups?.slice(0, 5) || []
+  const recent = topups.slice(0, 5)
 
   return (
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">{t('dashboard.title')}</h1>
-        <p className="text-slate-400 mt-1">Xin chào, {profile?.name || user.email} 👋</p>
+        <p className="text-slate-400 mt-1">Xin chào, {profile?.name || session.email} 👋</p>
       </div>
 
       {/* Stats */}
@@ -133,7 +131,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {recent.map((topup) => (
-                <div key={topup.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                <div key={topup._id.toString()} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                   <div>
                     <p className="text-sm text-white">{topup.transfer_content}</p>
                     <p className="text-xs text-slate-500">{new Date(topup.created_at).toLocaleString(locale)}</p>

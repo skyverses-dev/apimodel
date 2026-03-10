@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { User, TopupRequest } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { ezai } from '@/lib/ezai/client'
 import { UsageData } from '@/types'
 
@@ -17,16 +18,11 @@ const ZERO_USAGE: UsageData = {
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const admin = createAdminClient()
-    const { data: profile } = await admin
-      .from('rb_users')
-      .select('ezai_user_id')
-      .eq('id', user.id)
-      .single()
+    await connectDB()
+    const profile = await User.findById(session.userId).select('ezai_user_id').lean()
 
     if (!profile?.ezai_user_id) {
       return NextResponse.json(ZERO_USAGE)
@@ -36,29 +32,23 @@ export async function GET() {
 
     // Start of current month
     const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    const [ezaiUserResult, ezaiTxResult, topupsResult] = await Promise.allSettled([
+    const [ezaiUserResult, ezaiTxResult, topups] = await Promise.allSettled([
       ezai.getUser(ezaiUserId),
       ezai.getTransactions(ezaiUserId, 20),
-      admin
-        .from('rb_topup_requests')
-        .select('vnd_amount, credit_amount')
-        .eq('user_id', user.id)
-        .eq('status', 'approved')
-        .gte('approved_at', monthStart),
+      TopupRequest.find({
+        user_id: session.userId,
+        status: 'approved',
+        approved_at: { $gte: monthStart },
+      }).select('vnd_amount credit_amount').lean(),
     ])
 
-    // EzAI user data
     const ezaiUser = ezaiUserResult.status === 'fulfilled' ? ezaiUserResult.value : null
-
-    // EzAI transactions (already filtered by end_user_id on server)
     const userTx = ezaiTxResult.status === 'fulfilled' ? ezaiTxResult.value.transactions : []
-
-    // Monthly topups from our DB
-    const topups = topupsResult.status === 'fulfilled' ? (topupsResult.value.data ?? []) : []
-    const monthly_topup_vnd = topups.reduce((s, t) => s + Number(t.vnd_amount), 0)
-    const monthly_topup_credit = topups.reduce((s, t) => s + Number(t.credit_amount), 0)
+    const monthlyTopups = topups.status === 'fulfilled' ? topups.value : []
+    const monthly_topup_vnd = monthlyTopups.reduce((s, t) => s + Number(t.vnd_amount), 0)
+    const monthly_topup_credit = monthlyTopups.reduce((s, t) => s + Number(t.credit_amount), 0)
 
     const result: UsageData = {
       balance: ezaiUser?.balance ?? 0,

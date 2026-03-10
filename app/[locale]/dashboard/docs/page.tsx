@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import connectDB from '@/lib/db/mongodb'
+import { User } from '@/lib/db/models'
+import { getSession } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -13,43 +14,43 @@ const aiBase = aiBaseUrl
 
 const models = [
   // Claude
-  { id: 'claude-opus-4-6',    provider: 'Claude',  color: 'orange',  desc: 'Most powerful — complex reasoning' },
-  { id: 'claude-opus-4-5',    provider: 'Claude',  color: 'orange',  desc: 'Powerful — long context' },
-  { id: 'claude-sonnet-4-6',  provider: 'Claude',  color: 'purple', badge: 'new', desc: 'Balanced speed & quality' },
-  { id: 'claude-sonnet-4-5',  provider: 'Claude',  color: 'purple',  desc: 'Balanced speed & quality' },
-  { id: 'claude-sonnet-4',    provider: 'Claude',  color: 'purple',  desc: 'Previous generation Sonnet' },
-  { id: 'claude-haiku-4-5',   provider: 'Claude',  color: 'blue',    desc: 'Fast and cost-efficient' },
+  { id: 'claude-opus-4-6', provider: 'Claude', color: 'orange', desc: 'Most powerful — complex reasoning' },
+  { id: 'claude-opus-4-5', provider: 'Claude', color: 'orange', desc: 'Powerful — long context' },
+  { id: 'claude-sonnet-4-6', provider: 'Claude', color: 'purple', badge: 'new', desc: 'Balanced speed & quality' },
+  { id: 'claude-sonnet-4-5', provider: 'Claude', color: 'purple', desc: 'Balanced speed & quality' },
+  { id: 'claude-sonnet-4', provider: 'Claude', color: 'purple', desc: 'Previous generation Sonnet' },
+  { id: 'claude-haiku-4-5', provider: 'Claude', color: 'blue', desc: 'Fast and cost-efficient' },
   // GPT / OpenAI
-  { id: 'gpt-5.4',            provider: 'GPT',     color: 'green',  badge: 'new', desc: 'Latest GPT flagship' },
-  { id: 'gpt-5.3-codex',      provider: 'GPT',     color: 'green',   desc: 'Codex reasoning model' },
-  { id: 'gpt-5.2',            provider: 'GPT',     color: 'green',   desc: 'GPT-5.2 general' },
-  { id: 'gpt-5.1',            provider: 'GPT',     color: 'green',   desc: 'GPT-5.1 general' },
-  { id: 'gpt-5',              provider: 'GPT',     color: 'green',   desc: 'GPT-5 base model' },
-  { id: 'gpt-5-mini',         provider: 'GPT',     color: 'green',   desc: 'Compact GPT-5' },
-  { id: 'gpt-4.1',            provider: 'GPT',     color: 'green',   desc: 'GPT-4.1 flagship' },
-  { id: 'gpt-4.1-mini',       provider: 'GPT',     color: 'green',   desc: 'GPT-4.1 compact' },
-  { id: 'gpt-4.1-nano',       provider: 'GPT',     color: 'green',   desc: 'Ultra-fast nano' },
-  { id: 'gpt-4o',             provider: 'GPT',     color: 'green',   desc: 'GPT-4o multimodal' },
-  { id: 'gpt-4o-mini',        provider: 'GPT',     color: 'green',   desc: 'GPT-4o compact' },
-  { id: 'o3',                 provider: 'GPT',     color: 'green',   desc: 'o3 reasoning' },
-  { id: 'o3-mini',            provider: 'GPT',     color: 'green',   desc: 'o3-mini reasoning' },
-  { id: 'o4-mini',            provider: 'GPT',     color: 'green',   desc: 'o4-mini reasoning' },
+  { id: 'gpt-5.4', provider: 'GPT', color: 'green', badge: 'new', desc: 'Latest GPT flagship' },
+  { id: 'gpt-5.3-codex', provider: 'GPT', color: 'green', desc: 'Codex reasoning model' },
+  { id: 'gpt-5.2', provider: 'GPT', color: 'green', desc: 'GPT-5.2 general' },
+  { id: 'gpt-5.1', provider: 'GPT', color: 'green', desc: 'GPT-5.1 general' },
+  { id: 'gpt-5', provider: 'GPT', color: 'green', desc: 'GPT-5 base model' },
+  { id: 'gpt-5-mini', provider: 'GPT', color: 'green', desc: 'Compact GPT-5' },
+  { id: 'gpt-4.1', provider: 'GPT', color: 'green', desc: 'GPT-4.1 flagship' },
+  { id: 'gpt-4.1-mini', provider: 'GPT', color: 'green', desc: 'GPT-4.1 compact' },
+  { id: 'gpt-4.1-nano', provider: 'GPT', color: 'green', desc: 'Ultra-fast nano' },
+  { id: 'gpt-4o', provider: 'GPT', color: 'green', desc: 'GPT-4o multimodal' },
+  { id: 'gpt-4o-mini', provider: 'GPT', color: 'green', desc: 'GPT-4o compact' },
+  { id: 'o3', provider: 'GPT', color: 'green', desc: 'o3 reasoning' },
+  { id: 'o3-mini', provider: 'GPT', color: 'green', desc: 'o3-mini reasoning' },
+  { id: 'o4-mini', provider: 'GPT', color: 'green', desc: 'o4-mini reasoning' },
   // Gemini
-  { id: 'gemini-3-pro',       provider: 'Gemini',  color: 'sky',    badge: 'preview', desc: 'Gemini 3 Pro preview' },
-  { id: 'gemini-3-flash',     provider: 'Gemini',  color: 'sky',    badge: 'preview', desc: 'Gemini 3 Flash preview' },
-  { id: 'gemini-2.5-pro',     provider: 'Gemini',  color: 'sky',     desc: 'Gemini 2.5 Pro' },
-  { id: 'gemini-2.5-flash',   provider: 'Gemini',  color: 'sky',     desc: 'Gemini 2.5 Flash' },
+  { id: 'gemini-3-pro', provider: 'Gemini', color: 'sky', badge: 'preview', desc: 'Gemini 3 Pro preview' },
+  { id: 'gemini-3-flash', provider: 'Gemini', color: 'sky', badge: 'preview', desc: 'Gemini 3 Flash preview' },
+  { id: 'gemini-2.5-pro', provider: 'Gemini', color: 'sky', desc: 'Gemini 2.5 Pro' },
+  { id: 'gemini-2.5-flash', provider: 'Gemini', color: 'sky', desc: 'Gemini 2.5 Flash' },
   // xAI
-  { id: 'grok-code-fast-1',   provider: 'xAI',     color: 'pink',    desc: 'Grok fast code model' },
+  { id: 'grok-code-fast-1', provider: 'xAI', color: 'pink', desc: 'Grok fast code model' },
 ]
 
 const rateLimits = [
-  { tier: 'Free',    rpm: 5,   concurrent: 2,  condition: '$0 balance, no plan' },
-  { tier: 'Top-up',  rpm: 30,  concurrent: 5,  condition: 'Has credit balance' },
-  { tier: 'Starter', rpm: 30,  concurrent: 5,  condition: 'Monthly plan' },
-  { tier: 'Pro',     rpm: 60,  concurrent: 10, condition: 'Monthly plan' },
-  { tier: 'Max',     rpm: 90,  concurrent: 15, condition: 'Monthly plan' },
-  { tier: 'Ultra',   rpm: 120, concurrent: 20, condition: 'Monthly plan' },
+  { tier: 'Free', rpm: 5, concurrent: 2, condition: '$0 balance, no plan' },
+  { tier: 'Top-up', rpm: 30, concurrent: 5, condition: 'Has credit balance' },
+  { tier: 'Starter', rpm: 30, concurrent: 5, condition: 'Monthly plan' },
+  { tier: 'Pro', rpm: 60, concurrent: 10, condition: 'Monthly plan' },
+  { tier: 'Max', rpm: 90, concurrent: 15, condition: 'Monthly plan' },
+  { tier: 'Ultra', rpm: 120, concurrent: 20, condition: 'Monthly plan' },
 ]
 
 const errorCodes = [
@@ -67,21 +68,21 @@ const errorCodes = [
 ]
 
 const compatibility = [
-  { tool: 'Claude Code',      status: '✅', setup: 'Set env vars or run install script' },
-  { tool: 'Cursor',           status: '✅', setup: 'Settings → Models → Custom API provider' },
-  { tool: 'Cline',            status: '✅', setup: 'Extension settings → Anthropic → Base URL' },
-  { tool: 'Continue',         status: '✅', setup: 'config.json → custom provider' },
-  { tool: 'Aider',            status: '✅', setup: 'Set ANTHROPIC_BASE_URL env var' },
-  { tool: 'OpenAI SDK',       status: '✅', setup: 'Set custom User-Agent (see below)' },
-  { tool: 'LiteLLM',          status: '✅', setup: 'Set api_base + api_key' },
+  { tool: 'Claude Code', status: '✅', setup: 'Set env vars or run install script' },
+  { tool: 'Cursor', status: '✅', setup: 'Settings → Models → Custom API provider' },
+  { tool: 'Cline', status: '✅', setup: 'Extension settings → Anthropic → Base URL' },
+  { tool: 'Continue', status: '✅', setup: 'config.json → custom provider' },
+  { tool: 'Aider', status: '✅', setup: 'Set ANTHROPIC_BASE_URL env var' },
+  { tool: 'OpenAI SDK', status: '✅', setup: 'Set custom User-Agent (see below)' },
+  { tool: 'LiteLLM', status: '✅', setup: 'Set api_base + api_key' },
   { tool: 'Any Anthropic tool', status: '✅', setup: 'Change base URL + API key' },
 ]
 
 const providerColor: Record<string, string> = {
   Claude: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  GPT:    'bg-green-500/20 text-green-300 border-green-500/30',
+  GPT: 'bg-green-500/20 text-green-300 border-green-500/30',
   Gemini: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-  xAI:    'bg-pink-500/20 text-pink-300 border-pink-500/30',
+  xAI: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
 }
 
 function CodeBlock({ code, lang = '' }: { code: string; lang?: string }) {
@@ -123,17 +124,12 @@ function Section({ id, icon: Icon, title, badge, children }: {
 
 export default async function DocsPage() {
   // Fetch the user's API key to pre-fill examples
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getSession()
 
   let apiKey = 'YOUR_API_KEY'
-  if (user) {
-    const admin = createAdminClient()
-    const { data: profile } = await admin
-      .from('rb_users')
-      .select('ezai_api_key')
-      .eq('id', user.id)
-      .single()
+  if (session) {
+    await connectDB()
+    const profile = await User.findById(session.userId).select('ezai_api_key').lean()
     if (profile?.ezai_api_key) apiKey = profile.ezai_api_key
   }
 
@@ -462,7 +458,7 @@ export default async function DocsPage() {
                           {m.badge && (
                             <Badge className={
                               m.badge === 'new' ? 'bg-green-500/20 text-green-300 border-green-500/30 text-[10px] px-1 py-0' :
-                              'bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-[10px] px-1 py-0'
+                                'bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-[10px] px-1 py-0'
                             }>{m.badge}</Badge>
                           )}
                         </div>
@@ -570,9 +566,8 @@ export default async function DocsPage() {
                   {errorCodes.map((e) => (
                     <tr key={e.code} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-2.5">
-                        <code className={`font-mono font-bold text-xs ${
-                          e.code.startsWith('4') ? 'text-red-400' : 'text-orange-400'
-                        }`}>{e.code}</code>
+                        <code className={`font-mono font-bold text-xs ${e.code.startsWith('4') ? 'text-red-400' : 'text-orange-400'
+                          }`}>{e.code}</code>
                       </td>
                       <td className="px-4 py-2.5 text-slate-300">{e.meaning}</td>
                       <td className="px-4 py-2.5 text-slate-400 text-xs hidden md:table-cell">{e.action}</td>

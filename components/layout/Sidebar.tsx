@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { RbUser } from '@/types'
 import {
   LayoutDashboard, Wallet, History, Key, BookOpen,
@@ -52,8 +51,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
   ]
 
   async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push(`/${locale}/auth/login`)
     router.refresh()
     toast.success('Đã đăng xuất')
