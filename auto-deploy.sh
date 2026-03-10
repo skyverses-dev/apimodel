@@ -41,6 +41,7 @@ echo "[STATIC] Copying assets to standalone..."
 [ -d ".next/static" ] && cp -r .next/static .next/standalone/.next/static
 [ -d "public" ] && cp -r public .next/standalone/public
 [ -d "messages" ] && cp -r messages .next/standalone/messages
+[ -f ".env.local" ] && cp .env.local .next/standalone/.env.local
 echo "[STATIC] Done"
 
 # Restart

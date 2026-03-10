@@ -63,6 +63,10 @@ if [ -d "messages" ]; then
   cp -r messages .next/standalone/messages
   success "i18n messages copied"
 fi
+if [ -f ".env.local" ]; then
+  cp .env.local .next/standalone/.env.local
+  success ".env.local copied"
+fi
 
 # Step 5: Restart PM2
 log "Restarting PM2 process..."
