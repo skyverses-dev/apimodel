@@ -129,17 +129,15 @@ export default function Sidebar({ user, email }: SidebarProps) {
           {locale === 'vi' ? 'Switch to English' : 'Chuyển Tiếng Việt'}
         </button>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-              <Avatar className="w-8 h-8">
-                <AvatarFallback className="bg-purple-700 text-white text-xs">
-                  {(user.name || email).slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm text-white truncate">{user.name || 'User'}</p>
-                <p className="text-xs text-slate-500 truncate">{email}</p>
-              </div>
+          <DropdownMenuTrigger className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer text-left">
+            <Avatar className="w-8 h-8">
+              <AvatarFallback className="bg-purple-700 text-white text-xs">
+                {(user.name || email).slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm text-white truncate">{user.name || 'User'}</p>
+              <p className="text-xs text-slate-500 truncate">{email}</p>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-slate-800 border-white/10">
