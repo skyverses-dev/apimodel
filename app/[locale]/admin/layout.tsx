@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import connectDB from '@/lib/db/mongodb'
 import { User } from '@/lib/db/models'
 import Sidebar from '@/components/layout/Sidebar'
+import TopProgressBar from '@/components/ui/TopProgressBar'
 import { RbUser } from '@/types'
 
 export default async function AdminLayout({
@@ -38,6 +39,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-white">
+      <TopProgressBar />
       <Sidebar user={rbUser} email={session.email} />
       <main className="flex-1 overflow-auto">
         {children}
