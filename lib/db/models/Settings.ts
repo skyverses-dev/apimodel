@@ -8,10 +8,16 @@ export interface ISettings {
     bank_name: string
     bank_holder: string
     bank_bin: string
+    // Plan pricing (VND)
     plan_starter_vnd: number
     plan_pro_vnd: number
     plan_max_vnd: number
     plan_ultra_vnd: number
+    // Plan limits (credits per reset period)
+    plan_starter_limit: string
+    plan_pro_limit: string
+    plan_max_limit: string
+    plan_ultra_limit: string
     updated_at: Date
 }
 
@@ -27,6 +33,10 @@ const SettingsSchema = new Schema<ISettings>(
         plan_pro_vnd: { type: Number, default: 599000 },
         plan_max_vnd: { type: Number, default: 999000 },
         plan_ultra_vnd: { type: Number, default: 1990000 },
+        plan_starter_limit: { type: String, default: '35 credits/5h' },
+        plan_pro_limit: { type: String, default: '80 credits/5h' },
+        plan_max_limit: { type: String, default: '180 credits/5h' },
+        plan_ultra_limit: { type: String, default: '400 credits/5h' },
     },
     {
         timestamps: { createdAt: false, updatedAt: 'updated_at' },

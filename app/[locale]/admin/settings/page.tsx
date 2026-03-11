@@ -25,6 +25,10 @@ export default async function AdminSettingsPage() {
           plan_pro_vnd: String(settings?.plan_pro_vnd || '599000'),
           plan_max_vnd: String(settings?.plan_max_vnd || '999000'),
           plan_ultra_vnd: String(settings?.plan_ultra_vnd || '1990000'),
+          plan_starter_limit: settings?.plan_starter_limit || '35 credits/5h',
+          plan_pro_limit: settings?.plan_pro_limit || '80 credits/5h',
+          plan_max_limit: settings?.plan_max_limit || '180 credits/5h',
+          plan_ultra_limit: settings?.plan_ultra_limit || '400 credits/5h',
         }}
       />
     </div>

@@ -20,6 +20,10 @@ interface SettingsFormProps {
     plan_pro_vnd: string
     plan_max_vnd: string
     plan_ultra_vnd: string
+    plan_starter_limit: string
+    plan_pro_limit: string
+    plan_max_limit: string
+    plan_ultra_limit: string
   }
 }
 
@@ -46,6 +50,10 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
         plan_pro_vnd: Number(values.plan_pro_vnd),
         plan_max_vnd: Number(values.plan_max_vnd),
         plan_ultra_vnd: Number(values.plan_ultra_vnd),
+        plan_starter_limit: values.plan_starter_limit,
+        plan_pro_limit: values.plan_pro_limit,
+        plan_max_limit: values.plan_max_limit,
+        plan_ultra_limit: values.plan_ultra_limit,
       }
 
       const res = await fetch('/api/admin/settings', {
@@ -178,23 +186,36 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
             Giá hiển thị cho người dùng khi đăng ký gói tháng. Nhập bằng VND.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <CardContent className="space-y-6">
           {[
-            { key: 'plan_starter_vnd', label: '🌱 Starter', placeholder: '299000', hint: '35 credits/ngày · EzAI giá $10/tháng' },
-            { key: 'plan_pro_vnd', label: '⚡ Pro', placeholder: '599000', hint: '80 credits/ngày · EzAI giá $20/tháng' },
-            { key: 'plan_max_vnd', label: '🚀 Max', placeholder: '999000', hint: '180 credits/ngày · EzAI giá $40/tháng' },
-            { key: 'plan_ultra_vnd', label: '👑 Ultra', placeholder: '1990000', hint: '400 credits/ngày · EzAI giá $80/tháng' },
-          ].map(({ key, label, placeholder, hint }) => (
-            <div key={key} className="space-y-2">
-              <Label className="text-slate-300">{label}</Label>
-              <Input
-                type="number"
-                value={(values as Record<string, string>)[key]}
-                onChange={e => update(key, e.target.value)}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder={placeholder}
-              />
-              <p className="text-xs text-slate-500">{hint}</p>
+            { key: 'starter', label: '🌱 Starter', vndKey: 'plan_starter_vnd', limitKey: 'plan_starter_limit', placeholder: '299000' },
+            { key: 'pro', label: '⚡ Pro', vndKey: 'plan_pro_vnd', limitKey: 'plan_pro_limit', placeholder: '599000' },
+            { key: 'max', label: '🚀 Max', vndKey: 'plan_max_vnd', limitKey: 'plan_max_limit', placeholder: '999000' },
+            { key: 'ultra', label: '👑 Ultra', vndKey: 'plan_ultra_vnd', limitKey: 'plan_ultra_limit', placeholder: '1990000' },
+          ].map(({ key, label, vndKey, limitKey, placeholder }) => (
+            <div key={key} className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-800/30 rounded-xl border border-slate-700/30">
+              <div className="sm:col-span-3">
+                <p className="text-white font-semibold text-sm">{label}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-xs">Giá (VND)</Label>
+                <Input
+                  type="number"
+                  value={(values as Record<string, string>)[vndKey]}
+                  onChange={e => update(vndKey, e.target.value)}
+                  className="bg-white/5 border-white/10 text-white"
+                  placeholder={placeholder}
+                />
+              </div>
+              <div className="sm:col-span-2 space-y-1">
+                <Label className="text-slate-400 text-xs">Mô tả gói (hiển thị cho user)</Label>
+                <Input
+                  value={(values as Record<string, string>)[limitKey]}
+                  onChange={e => update(limitKey, e.target.value)}
+                  className="bg-white/5 border-white/10 text-white"
+                  placeholder="35 credits/5h"
+                />
+              </div>
             </div>
           ))}
         </CardContent>

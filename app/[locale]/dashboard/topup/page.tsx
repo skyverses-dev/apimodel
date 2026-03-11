@@ -23,6 +23,10 @@ interface Settings {
   plan_pro_vnd: number
   plan_max_vnd: number
   plan_ultra_vnd: number
+  plan_starter_limit: string
+  plan_pro_limit: string
+  plan_max_limit: string
+  plan_ultra_limit: string
 }
 
 interface TopupRequest {
@@ -37,11 +41,11 @@ interface TopupRequest {
 
 const PRESETS = [100000, 200000, 500000, 1000000]
 
-const PLAN_INFO = [
-  { key: 'starter', label: 'Starter', emoji: '🌱', limit: '35 credits/5h', gradient: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
-  { key: 'pro', label: 'Pro', emoji: '⚡', limit: '80 credits/5h', gradient: 'from-blue-500/20 to-blue-600/10', border: 'border-blue-500/30', text: 'text-blue-400' },
-  { key: 'max', label: 'Max', emoji: '🚀', limit: '180 credits/5h', gradient: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-500/30', text: 'text-purple-400' },
-  { key: 'ultra', label: 'Ultra', emoji: '👑', limit: '400 credits/5h', gradient: 'from-amber-500/20 to-amber-600/10', border: 'border-amber-500/30', text: 'text-amber-400' },
+const PLAN_STYLES = [
+  { key: 'starter', label: 'Starter', emoji: '🌱', gradient: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
+  { key: 'pro', label: 'Pro', emoji: '⚡', gradient: 'from-blue-500/20 to-blue-600/10', border: 'border-blue-500/30', text: 'text-blue-400' },
+  { key: 'max', label: 'Max', emoji: '🚀', gradient: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-500/30', text: 'text-purple-400' },
+  { key: 'ultra', label: 'Ultra', emoji: '👑', gradient: 'from-amber-500/20 to-amber-600/10', border: 'border-amber-500/30', text: 'text-amber-400' },
 ]
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -195,6 +199,12 @@ export default function TopupPage() {
     return Number(settings[key] || 0)
   }
 
+  const planLimit = (plan: string) => {
+    if (!settings) return ''
+    const key = `plan_${plan}_limit` as keyof Settings
+    return String(settings[key] || '')
+  }
+
   async function handleCreateCredit() {
     if (vnd < 50000) { toast.error(t('topup.minAmount')); return }
     setLoading(true)
@@ -252,8 +262,8 @@ export default function TopupPage() {
         <button
           onClick={() => setTab('credit')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${tab === 'credit'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
-              : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+            : 'text-slate-400 hover:text-slate-200'
             }`}
         >
           <Zap size={15} /> Nạp credit
@@ -261,8 +271,8 @@ export default function TopupPage() {
         <button
           onClick={() => setTab('plan')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${tab === 'plan'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
-              : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+            : 'text-slate-400 hover:text-slate-200'
             }`}
         >
           <Calendar size={15} /> Gói tháng
@@ -281,8 +291,8 @@ export default function TopupPage() {
                   key={p}
                   onClick={() => setAmount(p.toString())}
                   className={`py-3 rounded-xl text-sm font-semibold transition-all duration-200 border ${amount === p.toString()
-                      ? 'bg-purple-600/20 border-purple-500/50 text-purple-300 shadow-lg shadow-purple-500/10'
-                      : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-600'
+                    ? 'bg-purple-600/20 border-purple-500/50 text-purple-300 shadow-lg shadow-purple-500/10'
+                    : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-600'
                     }`}
                 >
                   {p >= 1000000 ? `${p / 1000000}M` : `${p / 1000}K`}
@@ -357,16 +367,17 @@ export default function TopupPage() {
       {tab === 'plan' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PLAN_INFO.map(plan => {
+            {PLAN_STYLES.map(plan => {
               const price = planPrice(plan.key)
+              const limit = planLimit(plan.key)
               const isSelected = selectedPlan === plan.key
               return (
                 <button
                   key={plan.key}
                   onClick={() => setSelectedPlan(plan.key)}
                   className={`text-left p-5 rounded-xl border transition-all duration-200 ${isSelected
-                      ? `bg-gradient-to-br ${plan.gradient} ${plan.border} shadow-lg`
-                      : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600'
+                    ? `bg-gradient-to-br ${plan.gradient} ${plan.border} shadow-lg`
+                    : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600'
                     }`}
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -379,7 +390,7 @@ export default function TopupPage() {
                     {price > 0 ? formatVND(price) : '—'}
                     <span className="text-slate-500 text-xs font-normal ml-1">/tháng</span>
                   </p>
-                  <p className={`text-xs ${isSelected ? plan.text : 'text-slate-500'}`}>{plan.limit}</p>
+                  <p className={`text-xs ${isSelected ? plan.text : 'text-slate-500'}`}>{limit}</p>
                 </button>
               )
             })}
@@ -392,7 +403,7 @@ export default function TopupPage() {
                 <div>
                   <p className="text-slate-400 text-xs mb-1">Gói đã chọn</p>
                   <p className="text-white font-bold capitalize text-lg">{selectedPlan}</p>
-                  <p className="text-slate-500 text-xs mt-0.5">{PLAN_INFO.find(p => p.key === selectedPlan)?.limit}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">{planLimit(selectedPlan)}</p>
                 </div>
                 <p className="text-purple-300 font-bold text-xl">{formatVND(planPrice(selectedPlan))}</p>
               </CardContent>
