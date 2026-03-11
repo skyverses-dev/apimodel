@@ -48,11 +48,10 @@ export async function POST(request: Request) {
     const usdAmount = vnd_amount / exchangeRate
     const creditAmount = isPlan ? 0 : usdAmount * leverage
 
-    const transferContent = generateTransferContent(userCode)
-
-    // Check if identical pending request exists
+    // Check if user already has a pending request with same amount & type
     const existingRequest = await TopupRequest.findOne({
-      transfer_content: transferContent,
+      user_id: session.userId,
+      vnd_amount,
       status: 'pending',
       type: isPlan ? 'plan' : 'credit',
       ...(isPlan ? { plan_name } : {}),
@@ -65,6 +64,8 @@ export async function POST(request: Request) {
         user_id: existingRequest.user_id.toString(),
       })
     }
+
+    const transferContent = generateTransferContent(userCode)
 
     // Create new topup request
     const topup = await TopupRequest.create({
