@@ -10,10 +10,14 @@ export async function GET() {
     return NextResponse.json({
       exchange_rate: settings?.exchange_rate || 26000,
       user_leverage: settings?.user_leverage || 30,
-      bank_account: settings?.bank_account || '11975151',
-      bank_name: settings?.bank_name || 'ACB',
-      bank_holder: settings?.bank_holder || 'PHAN DINH DUC',
-      bank_bin: settings?.bank_bin || '970416',
+      bank_account: settings?.bank_account || '',
+      bank_name: settings?.bank_name || '',
+      bank_holder: settings?.bank_holder || '',
+      bank_bin: settings?.bank_bin || '',
+      plan_starter_vnd: settings?.plan_starter_vnd || 299000,
+      plan_pro_vnd: settings?.plan_pro_vnd || 599000,
+      plan_max_vnd: settings?.plan_max_vnd || 999000,
+      plan_ultra_vnd: settings?.plan_ultra_vnd || 1990000,
     })
   } catch {
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 })

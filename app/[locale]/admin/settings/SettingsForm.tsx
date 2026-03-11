@@ -34,10 +34,24 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
   async function handleSave() {
     setLoading(true)
     try {
+      // Convert numeric fields to proper numbers
+      const payload = {
+        exchange_rate: Number(values.exchange_rate),
+        user_leverage: Number(values.user_leverage),
+        bank_account: values.bank_account,
+        bank_name: values.bank_name,
+        bank_holder: values.bank_holder,
+        bank_bin: values.bank_bin,
+        plan_starter_vnd: Number(values.plan_starter_vnd),
+        plan_pro_vnd: Number(values.plan_pro_vnd),
+        plan_max_vnd: Number(values.plan_max_vnd),
+        plan_ultra_vnd: Number(values.plan_ultra_vnd),
+      }
+
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
