@@ -4,7 +4,6 @@ import { User } from '@/lib/db/models'
 import { hashPassword } from '@/lib/auth/password'
 import { signToken } from '@/lib/auth/jwt'
 import { setSession } from '@/lib/auth/session'
-import { ezai } from '@/lib/ezai/client'
 
 export async function POST(request: Request) {
     try {
@@ -38,34 +37,6 @@ export async function POST(request: Request) {
             role: user.role,
         })
         await setSession(token)
-
-        // Auto-provision EzAI account (non-blocking)
-        try {
-            const ezaiUser = await ezai.createUser(user.email, user.name || user.email)
-            await User.findByIdAndUpdate(user._id, {
-                ezai_user_id: ezaiUser.id,
-                ezai_api_key: ezaiUser.api_key,
-            })
-        } catch (ezaiErr: unknown) {
-            // If email already exists on EzAI, try to link
-            const msg = ezaiErr instanceof Error ? ezaiErr.message.toLowerCase() : ''
-            if (msg.includes('already') || msg.includes('exist') || msg.includes('duplicate')) {
-                try {
-                    const { users } = await ezai.listUsers(1, 200)
-                    const existing = users.find(u => u.email === user.email)
-                    if (existing) {
-                        const full = await ezai.getUser(existing.id)
-                        const key = full.api_keys?.find(k => k.is_active === 1)?.full_key || full.api_keys?.[0]?.full_key || ''
-                        await User.findByIdAndUpdate(user._id, {
-                            ezai_user_id: existing.id,
-                            ezai_api_key: key,
-                        })
-                    }
-                } catch { /* silently skip linking */ }
-            } else {
-                console.error('EzAI auto-provision failed:', ezaiErr)
-            }
-        }
 
         return NextResponse.json({ success: true, user: user.toJSON() })
     } catch (error) {
