@@ -9,3 +9,6 @@ export type { ISettings } from './Settings'
 
 export { AuditLog } from './AuditLog'
 export type { IAuditLog } from './AuditLog'
+
+export { WebhookLog } from './WebhookLog'
+export type { IWebhookLog } from './WebhookLog'

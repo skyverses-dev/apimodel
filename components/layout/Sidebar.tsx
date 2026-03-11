@@ -46,6 +46,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
     { href: `/${locale}/admin/users`, icon: Users, label: t('nav.users') },
     { href: `/${locale}/admin/topups`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/admin/transactions`, icon: History, label: t('nav.transactions') },
+    { href: `/${locale}/admin/webhooks`, icon: Globe, label: 'Webhooks' },
     { href: `/${locale}/admin/settings`, icon: Settings, label: t('nav.settings') },
     { href: `/${locale}/admin/docs`, icon: BookOpen, label: t('nav.resellerDocs') },
   ]
