@@ -23,10 +23,17 @@ export default async function TransactionsPage() {
     return <Badge className="bg-yellow-600/20 text-yellow-300 border-yellow-500/30">{t('topup.pending')}</Badge>
   }
 
+  const typeBadge = (type: string, planName?: string) => {
+    if (type === 'plan') {
+      return <Badge className="bg-pink-600/20 text-pink-300 border-pink-500/30">Gói {planName?.toUpperCase()}</Badge>
+    }
+    return <Badge className="bg-blue-600/20 text-blue-300 border-blue-500/30">Nạp credit</Badge>
+  }
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-white mb-2">{t('transactions.title')}</h1>
-      <p className="text-slate-400 mb-8">Tất cả giao dịch nạp tiền</p>
+    <div className="p-6 sm:p-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('transactions.title')}</h1>
+      <p className="text-slate-400 text-sm mb-8">Tất cả giao dịch nạp tiền</p>
 
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0">
@@ -37,25 +44,28 @@ export default async function TransactionsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    {[t('transactions.date'), t('transactions.amount'), t('transactions.credit'), t('transactions.transferContent'), t('transactions.status')].map(h => (
-                      <th key={h} className="text-left px-6 py-3 text-xs text-slate-500 uppercase tracking-wider">{h}</th>
+                    {[t('transactions.date'), 'Loại', t('transactions.amount'), t('transactions.credit'), t('transactions.transferContent'), t('transactions.status')].map(h => (
+                      <th key={h} className="text-left px-5 py-3 text-xs text-slate-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {topups.map((row) => (
                     <tr key={row._id.toString()} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4 text-sm text-slate-300">
+                      <td className="px-5 py-4 text-sm text-slate-300 whitespace-nowrap">
                         {new Date(row.created_at).toLocaleString(locale)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white font-medium">{formatVND(row.vnd_amount)}</td>
-                      <td className="px-6 py-4 text-sm text-green-400 font-medium">+{formatUSD(row.credit_amount)}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-4">{typeBadge(row.type, row.plan_name ?? undefined)}</td>
+                      <td className="px-5 py-4 text-sm text-white font-medium">{formatVND(row.vnd_amount)}</td>
+                      <td className="px-5 py-4 text-sm text-green-400 font-medium">
+                        {row.type === 'plan' ? `Gói ${row.plan_name}` : `+${formatUSD(row.credit_amount)}`}
+                      </td>
+                      <td className="px-5 py-4">
                         <code className="text-xs text-purple-300 bg-purple-900/20 px-2 py-1 rounded">
                           {row.transfer_content}
                         </code>
                       </td>
-                      <td className="px-6 py-4">{statusBadge(row.status)}</td>
+                      <td className="px-5 py-4">{statusBadge(row.status)}</td>
                     </tr>
                   ))}
                 </tbody>
