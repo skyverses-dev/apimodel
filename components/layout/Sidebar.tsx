@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { RbUser } from '@/types'
 import {
   LayoutDashboard, Wallet, History, Key, BookOpen,
-  Users, Settings, LogOut, ChevronRight, Globe, ShieldCheck
+  Users, Settings, LogOut, ChevronRight, Globe, ShieldCheck, BarChart2
 } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -36,6 +36,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
     { href: `/${locale}/dashboard`, icon: LayoutDashboard, label: t('nav.dashboard') },
     { href: `/${locale}/dashboard/topup`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/dashboard/transactions`, icon: History, label: t('nav.transactions') },
+    { href: `/${locale}/dashboard/usage`, icon: BarChart2, label: t('nav.usage') },
     { href: `/${locale}/dashboard/api-keys`, icon: Key, label: t('nav.apiKeys') },
     { href: `/${locale}/dashboard/docs`, icon: BookOpen, label: t('nav.docs') },
   ]

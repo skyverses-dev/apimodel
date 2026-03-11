@@ -32,15 +32,44 @@ export default async function DashboardPage() {
   const recent = topups.slice(0, 5)
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">{t('dashboard.title')}</h1>
         <p className="text-slate-400 mt-1">Xin chào, {profile?.name || session.email} 👋</p>
       </div>
 
-      {/* Live AI Usage Stats — full dashboard */}
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card className="bg-gradient-to-br from-green-900/50 to-green-800/30 border-green-500/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-300">{t('dashboard.totalTopup')}</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{formatVND(totalVND)}</div>
+            <p className="text-xs text-slate-400 mt-1">= {formatUSD(totalCredit)} credit</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-900/50 to-yellow-800/30 border-yellow-500/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-300">{t('dashboard.pendingTopup')}</CardTitle>
+            <Clock className="h-4 w-4 text-yellow-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{pending.length}</div>
+            <p className="text-xs text-slate-400 mt-1">Đang chờ xác nhận</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Live AI Usage Stats */}
       {profile?.ezai_user_id ? (
         <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Zap size={18} className="text-yellow-400" />
+            Sử dụng AI
+          </h2>
           <LiveStats />
         </div>
       ) : (
@@ -48,31 +77,6 @@ export default async function DashboardPage() {
           Tài khoản AI chưa được kích hoạt. Vui lòng liên hệ admin.
         </div>
       )}
-
-      {/* Top-up summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <Card className="bg-[#0d1117] border-white/10">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">{t('dashboard.totalTopup')}</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{formatVND(totalVND)}</div>
-            <p className="text-xs text-slate-400 mt-1">= {formatUSD(totalCredit)} credit</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[#0d1117] border-white/10">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">{t('dashboard.pendingTopup')}</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{pending.length}</div>
-            <p className="text-xs text-slate-400 mt-1">Đang chờ xác nhận</p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -107,7 +111,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent Transactions */}
-      <Card className="bg-[#0d1117] border-white/10">
+      <Card className="bg-white/5 border-white/10">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-white">{t('dashboard.recentTransactions')}</CardTitle>
           <Link href={`/${locale}/dashboard/transactions`}>
@@ -130,8 +134,8 @@ export default async function DashboardPage() {
                 <div key={topup._id.toString()} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                   <div className="flex items-center gap-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${topup.type === 'plan'
-                      ? 'bg-pink-500/20 text-pink-300'
-                      : 'bg-blue-500/20 text-blue-300'
+                        ? 'bg-pink-500/20 text-pink-300'
+                        : 'bg-blue-500/20 text-blue-300'
                       }`}>
                       {topup.type === 'plan' ? `Gói ${topup.plan_name}` : 'Credit'}
                     </span>
@@ -157,10 +161,6 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
-
-      <p className="text-xs text-slate-600 mt-6 text-center">
-        Tự động làm mới sau mỗi 30 giây
-      </p>
     </div>
   )
 }
