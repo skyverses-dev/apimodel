@@ -64,7 +64,9 @@ async function processTransaction(
 
     // Extract "2BRAIN UXXXX RXXXX" from anywhere in the content
     // Bank content can be: "120930457758-0899028898-2BRAIN U0004 RAFB3"
-    const match = rawContent.match(/2BRAIN\s+U\d+\s+R[A-F0-9]+/i)
+    // Match: "2BRAIN CR U0002 R7A3F1B9C2" or "2BRAIN PL STARTER U0002 R7A3F1B9C2"
+    // Also backward compatible: "2BRAIN U0002 RA3F1"
+    const match = rawContent.match(/2BRAIN\s+(?:CR|PL\s+\w+)?\s*U\d+\s+R[A-F0-9]+/i)
 
     if (!match) {
         const log = await WebhookLog.create({

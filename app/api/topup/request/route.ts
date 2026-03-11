@@ -71,7 +71,11 @@ export async function POST(request: Request) {
       })
     }
 
-    const transferContent = generateTransferContent(userCode)
+    const transferContent = generateTransferContent(
+      userCode,
+      isPlan ? 'plan' : 'credit',
+      isPlan ? plan_name : undefined
+    )
 
     // Create new topup request
     const topup = await TopupRequest.create({
