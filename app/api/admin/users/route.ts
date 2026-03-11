@@ -48,23 +48,62 @@ export async function POST(request: Request) {
 
     const targetUser = await User.findById(user_id).lean()
     if (!targetUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    // If already provisioned, just return success
     if (targetUser.ezai_user_id) {
-      return NextResponse.json({ error: 'User already has an EzAI account' }, { status: 400 })
+      return NextResponse.json({ message: 'Already activated', ezai_user_id: targetUser.ezai_user_id })
     }
 
-    // Create EzAI user
-    const ezaiUser = await ezai.createUser(targetUser.email, targetUser.name || targetUser.email)
+    let ezaiUserId: string
+    let ezaiApiKey: string
 
-    // Update profile with EzAI credentials
+    try {
+      // Try to create new EzAI user
+      const ezaiUser = await ezai.createUser(targetUser.email, targetUser.name || targetUser.email)
+      ezaiUserId = ezaiUser.id
+      ezaiApiKey = ezaiUser.api_key
+    } catch (createErr: unknown) {
+      const errMsg = createErr instanceof Error ? createErr.message : ''
+
+      // If email already exists on EzAI, find and link the existing account
+      if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exist') || errMsg.toLowerCase().includes('duplicate')) {
+        console.log(`EzAI user ${targetUser.email} already exists, looking up...`)
+
+        // Search through EzAI users to find the one with matching email
+        const { users } = await ezai.listUsers(1, 200)
+        const existing = users.find(u => u.email === targetUser.email)
+
+        if (!existing) {
+          return NextResponse.json({ error: 'EzAI user exists but could not be found via search' }, { status: 500 })
+        }
+
+        ezaiUserId = existing.id
+
+        // Get API key from existing user
+        const fullUser = await ezai.getUser(ezaiUserId)
+        const activeKey = fullUser.api_keys?.find(k => k.is_active === 1)
+        ezaiApiKey = activeKey?.full_key || fullUser.api_keys?.[0]?.full_key || ''
+
+        // If no key exists, create one
+        if (!ezaiApiKey) {
+          const newKey = await ezai.createApiKey(ezaiUserId)
+          ezaiApiKey = newKey.full_key || ''
+        }
+      } else {
+        throw createErr
+      }
+    }
+
+    // Update local profile with EzAI credentials
     const updated = await User.findByIdAndUpdate(user_id, {
-      ezai_user_id: ezaiUser.id,
-      ezai_api_key: ezaiUser.api_key,
+      ezai_user_id: ezaiUserId,
+      ezai_api_key: ezaiApiKey,
     }, { new: true }).lean()
 
     await AuditLog.create({
       user_id: session.userId,
       action: 'user_provisioned',
-      details: { target_user_id: user_id, ezai_user_id: ezaiUser.id },
+      details: { target_user_id: user_id, ezai_user_id: ezaiUserId },
     })
 
     return NextResponse.json(updated)
