@@ -6,13 +6,11 @@ import { toast } from 'sonner'
 import useSWR from 'swr'
 import Image from 'next/image'
 import { formatVND, formatUSD, vndToUsd, usdToCredit } from '@/lib/utils/currency'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Copy, Check, RefreshCw, QrCode, Building2, Zap, Calendar } from 'lucide-react'
+import { Copy, Check, RefreshCw, QrCode, Building2, Zap, Calendar, ArrowRight, Sparkles } from 'lucide-react'
 
 interface Settings {
   exchange_rate: number
@@ -40,14 +38,17 @@ interface TopupRequest {
 const PRESETS = [100000, 200000, 500000, 1000000]
 
 const PLAN_INFO = [
-  { key: 'starter', label: 'Starter', color: 'from-slate-500 to-slate-600', badge: 'bg-slate-600/20 text-slate-300', limit: '35 credits · reset mỗi 5h', icon: '🌱' },
-  { key: 'pro', label: 'Pro', color: 'from-blue-500 to-blue-600', badge: 'bg-blue-600/20 text-blue-300', limit: '80 credits · reset mỗi 5h', icon: '⚡' },
-  { key: 'max', label: 'Max', color: 'from-purple-500 to-purple-600', badge: 'bg-purple-600/20 text-purple-300', limit: '180 credits · reset mỗi 5h', icon: '🚀' },
-  { key: 'ultra', label: 'Ultra', color: 'from-pink-500 to-pink-600', badge: 'bg-pink-600/20 text-pink-300', limit: '400 credits · reset mỗi 5h', icon: '👑' },
+  { key: 'starter', label: 'Starter', emoji: '🌱', limit: '35 credits/5h', gradient: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
+  { key: 'pro', label: 'Pro', emoji: '⚡', limit: '80 credits/5h', gradient: 'from-blue-500/20 to-blue-600/10', border: 'border-blue-500/30', text: 'text-blue-400' },
+  { key: 'max', label: 'Max', emoji: '🚀', limit: '180 credits/5h', gradient: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-500/30', text: 'text-purple-400' },
+  { key: 'ultra', label: 'Ultra', emoji: '👑', limit: '400 credits/5h', gradient: 'from-amber-500/20 to-amber-600/10', border: 'border-amber-500/30', text: 'text-amber-400' },
 ]
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
+/* ============================================
+   QR Payment View
+   ============================================ */
 function QRView({ activeRequest, settings, onReset }: {
   activeRequest: TopupRequest
   settings: Settings
@@ -66,96 +67,114 @@ function QRView({ activeRequest, settings, onReset }: {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="text-3xl font-bold text-white mb-2">{t('topup.title')}</h1>
-      <p className="text-slate-400 mb-8">Quét QR hoặc chuyển khoản thủ công</p>
+    <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{t('topup.title')}</h1>
+        <p className="text-slate-400">Quét QR hoặc chuyển khoản thủ công</p>
+      </div>
 
+      {/* Plan badge */}
       {activeRequest.type === 'plan' && activeRequest.plan_name && (
-        <div className="mb-4 p-3 bg-purple-900/30 border border-purple-500/30 rounded-lg flex items-center gap-2">
-          <Calendar size={16} className="text-purple-400" />
-          <span className="text-purple-300 text-sm">
-            Gói tháng: <strong className="capitalize">{activeRequest.plan_name}</strong> — sau khi duyệt sẽ kích hoạt ngay
+        <div className="mb-6 px-4 py-3 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center gap-3">
+          <Calendar size={18} className="text-purple-400 shrink-0" />
+          <span className="text-purple-200 text-sm">
+            Gói tháng: <strong className="capitalize text-purple-300">{activeRequest.plan_name}</strong> — kích hoạt sau khi duyệt
           </span>
         </div>
       )}
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="bg-white/5 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <QrCode size={20} className="text-purple-400" />
-              {t('topup.scanQR')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <div className="bg-white p-3 rounded-xl">
-              <Image src={qrUrl} alt="VietQR" width={200} height={200} unoptimized />
+        {/* QR Code */}
+        <Card className="bg-slate-800/50 border-slate-700/50 overflow-hidden">
+          <CardContent className="p-6 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-4 w-full">
+              <QrCode size={18} className="text-purple-400" />
+              <span className="text-white font-semibold text-sm">{t('topup.scanQR')}</span>
             </div>
-            <Badge className="bg-yellow-600/20 text-yellow-300 border-yellow-500/30">
-              <RefreshCw size={12} className="mr-1 animate-spin" />
+            <div className="bg-white p-4 rounded-2xl shadow-lg shadow-black/20">
+              <Image src={qrUrl} alt="VietQR" width={220} height={220} unoptimized />
+            </div>
+            <Badge className="mt-4 bg-amber-500/15 text-amber-300 border-amber-500/30 px-4 py-1.5">
+              <RefreshCw size={12} className="mr-1.5 animate-spin" />
               {t('topup.pending')}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/5 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Building2 size={20} className="text-green-400" />
-              {t('topup.bankInfo')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              { label: t('topup.bankName'), value: settings.bank_name },
-              { label: t('topup.accountNumber'), value: settings.bank_account },
-              { label: t('topup.accountHolder'), value: settings.bank_holder },
-              { label: 'Số tiền', value: formatVND(activeRequest.vnd_amount) },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-xs text-slate-500 mb-1">{label}</p>
-                <p className="text-white font-medium">{value}</p>
-              </div>
-            ))}
-            <Separator className="bg-white/10" />
-            <div>
-              <p className="text-xs text-slate-500 mb-1">{t('topup.transferContent')}</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 bg-purple-900/30 text-purple-300 px-3 py-2 rounded-lg text-sm font-mono border border-purple-500/30">
-                  {activeRequest.transfer_content}
-                </code>
-                <Button size="icon" variant="outline" onClick={() => copyToClipboard(activeRequest.transfer_content)} className="border-white/10 hover:bg-white/10">
-                  {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                </Button>
+        {/* Bank Info */}
+        <Card className="bg-slate-800/50 border-slate-700/50">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Building2 size={18} className="text-emerald-400" />
+              <span className="text-white font-semibold text-sm">{t('topup.bankInfo')}</span>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { label: t('topup.bankName'), value: settings.bank_name },
+                { label: t('topup.accountNumber'), value: settings.bank_account },
+                { label: t('topup.accountHolder'), value: settings.bank_holder },
+                { label: 'Số tiền', value: formatVND(activeRequest.vnd_amount) },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-slate-400 text-xs mb-0.5">{label}</p>
+                  <p className="text-white font-medium text-[15px]">{value}</p>
+                </div>
+              ))}
+
+              <div className="h-px bg-slate-700/50 my-1" />
+
+              <div>
+                <p className="text-slate-400 text-xs mb-1.5">{t('topup.transferContent')}</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-purple-500/10 text-purple-300 px-3 py-2.5 rounded-lg text-sm font-mono border border-purple-500/20 tracking-wide">
+                    {activeRequest.transfer_content}
+                  </code>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => copyToClipboard(activeRequest.transfer_content)}
+                    className="border-slate-600 hover:bg-slate-700 shrink-0 h-10 w-10"
+                  >
+                    {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} className="text-slate-300" />}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="bg-green-900/20 border-green-500/30 mt-6">
-        <CardContent className="flex items-center justify-between p-4">
+      {/* Summary */}
+      <Card className="bg-emerald-500/10 border-emerald-500/20 mt-6">
+        <CardContent className="flex items-center justify-between p-5">
           <div>
-            <p className="text-slate-400 text-sm">Bạn sẽ nhận được</p>
+            <p className="text-slate-400 text-sm mb-1">Bạn sẽ nhận được</p>
             {activeRequest.type === 'plan' ? (
-              <p className="text-2xl font-bold text-purple-400 capitalize">Gói {activeRequest.plan_name}</p>
+              <p className="text-xl font-bold text-purple-300 capitalize">Gói {activeRequest.plan_name}</p>
             ) : (
-              <p className="text-2xl font-bold text-green-400">{formatUSD(activeRequest.credit_amount)} credit</p>
+              <p className="text-xl font-bold text-emerald-400">{formatUSD(activeRequest.credit_amount)} credit</p>
             )}
           </div>
-          <div className="text-right text-sm text-slate-400">
-            <p>{t('topup.note')}</p>
-          </div>
+          <p className="text-slate-500 text-xs text-right max-w-[180px]">{t('topup.note')}</p>
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="mt-4 border-white/10 text-white hover:bg-white/10" onClick={onReset}>
+      <Button
+        variant="outline"
+        className="mt-4 border-slate-600 text-slate-300 hover:text-white hover:bg-slate-800"
+        onClick={onReset}
+      >
         Tạo yêu cầu mới
       </Button>
     </div>
   )
 }
 
+/* ============================================
+   Main Topup Page
+   ============================================ */
 export default function TopupPage() {
   const t = useTranslations()
   const [tab, setTab] = useState<'credit' | 'plan'>('credit')
@@ -221,123 +240,161 @@ export default function TopupPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="text-3xl font-bold text-white mb-2">{t('topup.title')}</h1>
-      <p className="text-slate-400 mb-6">Nạp tiền qua QR chuyển khoản ngân hàng</p>
+    <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{t('topup.title')}</h1>
+        <p className="text-slate-400">Nạp tiền qua QR chuyển khoản ngân hàng</p>
+      </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 mb-8 bg-slate-800/60 p-1 rounded-xl w-fit border border-slate-700/50">
         <button
           onClick={() => setTab('credit')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'credit' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${tab === 'credit'
+              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+              : 'text-slate-400 hover:text-slate-200'
+            }`}
         >
           <Zap size={15} /> Nạp credit
         </button>
         <button
           onClick={() => setTab('plan')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'plan' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${tab === 'plan'
+              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+              : 'text-slate-400 hover:text-slate-200'
+            }`}
         >
           <Calendar size={15} /> Gói tháng
         </button>
       </div>
 
-      {/* Credit tab */}
+      {/* ---- Credit Tab ---- */}
       {tab === 'credit' && (
-        <Card className="bg-white/5 border-white/10">
-          <CardContent className="pt-6 space-y-6">
+        <div className="space-y-6">
+          {/* Quick amounts */}
+          <div>
+            <p className="text-slate-300 text-sm font-medium mb-3">Chọn nhanh</p>
             <div className="grid grid-cols-4 gap-2">
               {PRESETS.map(p => (
-                <Button
+                <button
                   key={p}
-                  variant="outline"
-                  size="sm"
                   onClick={() => setAmount(p.toString())}
-                  className={`border-white/10 text-sm ${amount === p.toString() ? 'bg-purple-600/20 border-purple-500/50 text-purple-300' : 'text-slate-300 hover:bg-white/10'}`}
+                  className={`py-3 rounded-xl text-sm font-semibold transition-all duration-200 border ${amount === p.toString()
+                      ? 'bg-purple-600/20 border-purple-500/50 text-purple-300 shadow-lg shadow-purple-500/10'
+                      : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-600'
+                    }`}
                 >
                   {p >= 1000000 ? `${p / 1000000}M` : `${p / 1000}K`}
-                </Button>
+                </button>
               ))}
             </div>
-            <div className="space-y-2">
-              <Label className="text-slate-300">{t('topup.amount')}</Label>
-              <Input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                placeholder={t('topup.amountPlaceholder')}
-                min={50000}
-                className="bg-white/10 border-white/20 text-white text-lg placeholder:text-slate-500"
-              />
-              {vnd > 0 && <p className="text-xs text-slate-500">{formatVND(vnd)}</p>}
-            </div>
-            {vnd >= 50000 && settings && (
-              <div className="bg-purple-900/20 border border-purple-500/20 rounded-xl p-4 space-y-3">
-                <p className="text-slate-300 text-sm font-medium">{t('topup.youGet')}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">{t('topup.usdEquivalent')}</span>
-                  <span className="text-white">{formatUSD(usd)}</span>
+          </div>
+
+          {/* Custom amount */}
+          <div>
+            <p className="text-slate-300 text-sm font-medium mb-2">{t('topup.amount')}</p>
+            <Input
+              type="number"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder={t('topup.amountPlaceholder')}
+              min={50000}
+              className="bg-slate-800/50 border-slate-700/50 text-white text-lg h-12 placeholder:text-slate-600 focus:border-purple-500/50"
+            />
+            {vnd > 0 && <p className="text-slate-500 text-xs mt-1.5">{formatVND(vnd)}</p>}
+          </div>
+
+          {/* Calculation preview */}
+          {vnd >= 50000 && settings && (
+            <Card className="bg-slate-800/30 border-slate-700/40 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="px-5 py-3 bg-slate-800/50 border-b border-slate-700/30">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={14} className="text-purple-400" />
+                    <span className="text-slate-300 text-sm font-medium">{t('topup.youGet')}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">{t('topup.leverage')}</span>
-                  <span className="text-purple-400">x{settings.user_leverage}</span>
+                <div className="px-5 py-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">{t('topup.usdEquivalent')}</span>
+                    <span className="text-white font-medium">{formatUSD(usd)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">{t('topup.leverage')}</span>
+                    <Badge className="bg-purple-500/15 text-purple-300 border-purple-500/30">x{settings.user_leverage}</Badge>
+                  </div>
+                  <div className="h-px bg-slate-700/50" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-white font-semibold">{t('topup.creditAmount')}</span>
+                    <span className="text-2xl font-bold text-emerald-400">{formatUSD(credit)}</span>
+                  </div>
+                  <p className="text-slate-500 text-xs">Tỷ giá: 1 USD = {settings.exchange_rate.toLocaleString()} VND</p>
                 </div>
-                <Separator className="bg-white/10" />
-                <div className="flex items-center justify-between">
-                  <span className="text-white font-semibold">{t('topup.creditAmount')}</span>
-                  <span className="text-2xl font-bold text-green-400">{formatUSD(credit)}</span>
-                </div>
-                <p className="text-xs text-slate-500">Tỷ giá: 1 USD = {settings.exchange_rate.toLocaleString()} VND</p>
-              </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Submit */}
+          <Button
+            onClick={handleCreateCredit}
+            disabled={loading || vnd < 50000}
+            className="w-full bg-purple-600 hover:bg-purple-500 py-6 text-base font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/20"
+          >
+            {loading ? t('common.loading') : (
+              <span className="flex items-center gap-2">
+                {t('topup.createRequest')} <ArrowRight size={16} />
+              </span>
             )}
-            <Button onClick={handleCreateCredit} disabled={loading || vnd < 50000} className="w-full bg-purple-600 hover:bg-purple-700 py-6 text-base">
-              {loading ? t('common.loading') : t('topup.createRequest')}
-            </Button>
-            {vnd > 0 && vnd < 50000 && <p className="text-xs text-red-400 text-center">{t('topup.minAmount')}</p>}
-          </CardContent>
-        </Card>
+          </Button>
+          {vnd > 0 && vnd < 50000 && (
+            <p className="text-red-400 text-xs text-center">{t('topup.minAmount')}</p>
+          )}
+        </div>
       )}
 
-      {/* Plan tab */}
+      {/* ---- Plan Tab ---- */}
       {tab === 'plan' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {PLAN_INFO.map(plan => {
               const price = planPrice(plan.key)
+              const isSelected = selectedPlan === plan.key
               return (
                 <button
                   key={plan.key}
                   onClick={() => setSelectedPlan(plan.key)}
-                  className={`text-left p-4 rounded-xl border transition-all ${
-                    selectedPlan === plan.key
-                      ? 'border-purple-500 bg-purple-600/20'
-                      : 'border-white/10 bg-white/5 hover:bg-white/10'
-                  }`}
+                  className={`text-left p-5 rounded-xl border transition-all duration-200 ${isSelected
+                      ? `bg-gradient-to-br ${plan.gradient} ${plan.border} shadow-lg`
+                      : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600'
+                    }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xl">{plan.icon}</span>
-                    <Badge className={plan.badge}>{plan.label}</Badge>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-2xl">{plan.emoji}</span>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isSelected ? `${plan.text} bg-white/10` : 'text-slate-400 bg-slate-700/50'}`}>
+                      {plan.label}
+                    </span>
                   </div>
                   <p className="text-white font-bold text-xl mb-1">
                     {price > 0 ? formatVND(price) : '—'}
-                    <span className="text-slate-400 text-xs font-normal">/tháng</span>
+                    <span className="text-slate-500 text-xs font-normal ml-1">/tháng</span>
                   </p>
-                  <p className="text-slate-400 text-xs">{plan.limit}</p>
+                  <p className={`text-xs ${isSelected ? plan.text : 'text-slate-500'}`}>{plan.limit}</p>
                 </button>
               )
             })}
           </div>
 
+          {/* Selected plan summary */}
           {selectedPlan && (
-            <Card className="bg-purple-900/20 border-purple-500/30">
-              <CardContent className="p-4 flex items-center justify-between">
+            <Card className="bg-purple-500/10 border-purple-500/20">
+              <CardContent className="p-5 flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Gói đã chọn</p>
+                  <p className="text-slate-400 text-xs mb-1">Gói đã chọn</p>
                   <p className="text-white font-bold capitalize text-lg">{selectedPlan}</p>
-                  <p className="text-xs text-slate-500">{PLAN_INFO.find(p => p.key === selectedPlan)?.limit}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">{PLAN_INFO.find(p => p.key === selectedPlan)?.limit}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-purple-300 font-bold text-xl">{formatVND(planPrice(selectedPlan))}</p>
-                </div>
+                <p className="text-purple-300 font-bold text-xl">{formatVND(planPrice(selectedPlan))}</p>
               </CardContent>
             </Card>
           )}
@@ -345,12 +402,16 @@ export default function TopupPage() {
           <Button
             onClick={handleCreatePlan}
             disabled={loading || !selectedPlan}
-            className="w-full bg-purple-600 hover:bg-purple-700 py-6 text-base"
+            className="w-full bg-purple-600 hover:bg-purple-500 py-6 text-base font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/20"
           >
-            {loading ? t('common.loading') : `Đăng ký ${selectedPlan ? `gói ${selectedPlan}` : 'gói tháng'}`}
+            {loading ? t('common.loading') : (
+              <span className="flex items-center gap-2">
+                Đăng ký {selectedPlan ? `gói ${selectedPlan}` : 'gói tháng'} <ArrowRight size={16} />
+              </span>
+            )}
           </Button>
 
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-slate-500 text-xs text-center">
             Gói tháng sẽ được kích hoạt sau khi admin xác nhận thanh toán
           </p>
         </div>
