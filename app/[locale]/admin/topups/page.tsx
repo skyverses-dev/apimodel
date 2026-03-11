@@ -19,14 +19,16 @@ export default async function AdminTopupsPage() {
   users.forEach(u => { userMap[u._id.toString()] = u.name || u._id.toString().slice(0, 8) })
 
   const serializedTopups = topups.map(t => ({
-    ...t,
     id: t._id.toString(),
-    _id: t._id.toString(),
     user_id: t.user_id.toString(),
-    approved_by: t.approved_by?.toString() || null,
+    vnd_amount: t.vnd_amount,
+    usd_amount: t.usd_amount,
+    credit_amount: t.credit_amount,
+    transfer_content: t.transfer_content,
+    status: t.status,
+    type: t.type || 'credit',
+    plan_name: t.plan_name || undefined,
     created_at: t.created_at.toISOString(),
-    updated_at: t.updated_at.toISOString(),
-    approved_at: t.approved_at?.toISOString() || null,
   }))
 
   const pendingCount = topups.filter(t => t.status === 'pending').length
