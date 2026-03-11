@@ -28,6 +28,7 @@ export default async function AdminTopupsPage() {
     status: t.status,
     type: t.type || 'credit',
     plan_name: t.plan_name || undefined,
+    admin_note: t.admin_note || undefined,
     created_at: t.created_at.toISOString(),
   }))
 

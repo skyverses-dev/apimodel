@@ -23,6 +23,7 @@ interface TopupRequest {
   status: string
   type: string
   plan_name?: string
+  admin_note?: string
   created_at: string
 }
 
@@ -166,8 +167,8 @@ export default function TopupsTable({ initialTopups, userMap }: TopupsTableProps
             key={f}
             onClick={() => setFilter(f)}
             className={`px-4 py-1.5 rounded-full text-sm transition-colors ${filter === f
-                ? 'bg-purple-600 text-white'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+              ? 'bg-purple-600 text-white'
+              : 'bg-white/5 text-slate-400 hover:bg-white/10'
               }`}
           >
             {f === 'pending' ? 'Chờ duyệt' :
@@ -224,13 +225,15 @@ export default function TopupsTable({ initialTopups, userMap }: TopupsTableProps
                     </code>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`text-xs px-2 py-1 rounded-full ${topup.status === 'approved' ? 'bg-green-500/20 text-green-300' :
-                        topup.status === 'rejected' ? 'bg-red-500/20 text-red-300' :
-                          'bg-yellow-500/20 text-yellow-300'
-                      }`}>
-                      {topup.status === 'approved' ? 'Đã duyệt' :
-                        topup.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
-                    </span>
+                    {topup.status === 'approved' && topup.admin_note?.includes('webhook') ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300">Auto ✓ Webhook</span>
+                    ) : topup.status === 'approved' ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300">Admin duyệt</span>
+                    ) : topup.status === 'rejected' ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300">Từ chối</span>
+                    ) : (
+                      <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300">Chờ duyệt</span>
+                    )}
                   </td>
                   <td className="px-4 py-4">
                     {topup.status === 'pending' && (
