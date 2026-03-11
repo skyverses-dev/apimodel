@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import useSWR from 'swr'
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Check, RefreshCw, QrCode, Building2, Zap, Calendar, ArrowRight, Sparkles } from 'lucide-react'
+import { Copy, Check, CheckCircle, RefreshCw, QrCode, Building2, Zap, Calendar, ArrowRight, Sparkles } from 'lucide-react'
 
 interface Settings {
   exchange_rate: number
@@ -61,6 +61,9 @@ function QRView({ activeRequest, settings, onReset }: {
 }) {
   const t = useTranslations()
   const [copied, setCopied] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'approved' | 'rejected'>(
+    activeRequest.status as 'pending' | 'approved' | 'rejected'
+  )
 
   const qrUrl = `https://img.vietqr.io/image/${settings.bank_bin}-${settings.bank_account}-compact2.png?amount=${activeRequest.vnd_amount}&addInfo=${encodeURIComponent(activeRequest.transfer_content)}&accountName=${encodeURIComponent(settings.bank_holder)}`
 
@@ -69,6 +72,66 @@ function QRView({ activeRequest, settings, onReset }: {
     setCopied(true)
     toast.success('Đã sao chép!')
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Poll status every 5 seconds
+  const pollStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/topup/status?id=${activeRequest.id}`)
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.status === 'approved' && paymentStatus !== 'approved') {
+        setPaymentStatus('approved')
+        toast.success('🎉 Thanh toán thành công! Tài khoản đã được nạp.')
+      } else if (data.status === 'rejected' && paymentStatus !== 'rejected') {
+        setPaymentStatus('rejected')
+        toast.error('Thanh toán bị từ chối.')
+      }
+    } catch {
+      // silently ignore polling errors
+    }
+  }, [activeRequest.id, paymentStatus])
+
+  useEffect(() => {
+    if (paymentStatus !== 'pending') return
+    const interval = setInterval(pollStatus, 5000)
+    return () => clearInterval(interval)
+  }, [paymentStatus, pollStatus])
+
+  // ---- SUCCESS SCREEN ----
+  if (paymentStatus === 'approved') {
+    return (
+      <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+        <div className="text-center py-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/20 mb-6 animate-bounce">
+            <CheckCircle size={40} className="text-emerald-400" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3">Thanh toán thành công! 🎉</h2>
+          <p className="text-slate-400 mb-2">
+            {activeRequest.type === 'plan'
+              ? `Gói ${activeRequest.plan_name?.toUpperCase()} đã được kích hoạt`
+              : `+${formatUSD(activeRequest.credit_amount)} credit đã được cộng vào tài khoản`}
+          </p>
+          <p className="text-slate-500 text-sm mb-8">Số tiền: {formatVND(activeRequest.vnd_amount)}</p>
+
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={onReset}
+              className="bg-purple-600 hover:bg-purple-500"
+            >
+              Nạp thêm
+            </Button>
+            <Button
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-800"
+              onClick={() => window.location.href = '/dashboard'}
+            >
+              Về Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -102,7 +165,7 @@ function QRView({ activeRequest, settings, onReset }: {
             </div>
             <Badge className="mt-4 bg-amber-500/15 text-amber-300 border-amber-500/30 px-4 py-1.5">
               <RefreshCw size={12} className="mr-1.5 animate-spin" />
-              {t('topup.pending')}
+              Đang chờ thanh toán...
             </Badge>
           </CardContent>
         </Card>
@@ -166,13 +229,19 @@ function QRView({ activeRequest, settings, onReset }: {
         </CardContent>
       </Card>
 
-      <Button
-        variant="outline"
-        className="mt-4 border-slate-600 text-slate-300 hover:text-white hover:bg-slate-800"
-        onClick={onReset}
-      >
-        Tạo yêu cầu mới
-      </Button>
+      <div className="flex items-center gap-3 mt-4">
+        <Button
+          variant="outline"
+          className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-800"
+          onClick={onReset}
+        >
+          Tạo yêu cầu mới
+        </Button>
+        <p className="text-slate-600 text-xs">
+          <RefreshCw size={10} className="inline mr-1 animate-spin" />
+          Tự kiểm tra mỗi 5 giây
+        </p>
+      </div>
     </div>
   )
 }
