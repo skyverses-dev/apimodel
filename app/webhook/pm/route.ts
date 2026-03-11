@@ -108,40 +108,32 @@ async function processTransaction(
 
     // Get user
     const userProfile = await User.findById(topup.user_id).select('ezai_user_id email').lean()
-    if (!userProfile?.ezai_user_id) {
-        const log = await WebhookLog.create({
-            source: 'payment', method: 'POST', headers: rawHeaders, body: fullBody,
-            matched_topup_id: topup._id, result: 'no_ezai',
-            result_message: `User ${topup.user_id} has no EzAI account`, ip,
-        })
-        console.log(`[Webhook] #${log._id} — No EzAI account`)
-        return { success: false, message: 'User has no EzAI account' }
-    }
 
-    // Call EzAI
-    try {
-        if (topup.type === 'plan' && topup.plan_name) {
-            await ezai.activatePlan(userProfile.ezai_user_id, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
-        } else {
-            await ezai.topupUser(userProfile.ezai_user_id, topup.usd_amount)
+    // Try EzAI credit (non-blocking — admin can do manually later)
+    let ezaiCredited = false
+    if (userProfile?.ezai_user_id) {
+        try {
+            if (topup.type === 'plan' && topup.plan_name) {
+                await ezai.activatePlan(userProfile.ezai_user_id, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
+            } else {
+                await ezai.topupUser(userProfile.ezai_user_id, topup.usd_amount)
+            }
+            ezaiCredited = true
+        } catch (ezaiErr) {
+            console.log(`[Webhook] EzAI credit failed (will approve anyway):`, ezaiErr instanceof Error ? ezaiErr.message : ezaiErr)
         }
-    } catch (ezaiErr) {
-        const log = await WebhookLog.create({
-            source: 'payment', method: 'POST', headers: rawHeaders, body: fullBody,
-            matched_topup_id: topup._id, matched_user_email: userProfile.email,
-            result: 'error', result_message: `EzAI: ${ezaiErr instanceof Error ? ezaiErr.message : 'Unknown'}`, ip,
-        })
-        console.log(`[Webhook] #${log._id} — EzAI error`)
-        return { success: false, message: 'EzAI credit failed' }
     }
 
     // Approve topup
     const txId = tx.id || tx.transactionNumber || tx.transferId || ''
+    const ezaiNote = ezaiCredited ? '' : ' [EzAI pending - admin cần credit thủ công]'
     await TopupRequest.findByIdAndUpdate(topup._id, {
         status: 'approved',
-        admin_note: `Auto-approved via webhook${txId ? ` (ref: ${txId})` : ''}`,
+        admin_note: `Auto-approved via webhook${txId ? ` (ref: ${txId})` : ''}${ezaiNote}`,
         approved_at: new Date(),
     })
+
+    const userEmail = userProfile?.email || 'unknown'
 
     // Audit log
     await AuditLog.create({
@@ -154,25 +146,27 @@ async function processTransaction(
             credit_amount: topup.credit_amount,
             type: topup.type,
             plan_name: topup.plan_name,
+            ezai_credited: ezaiCredited,
         },
     })
 
     // Webhook log — success
     const log = await WebhookLog.create({
         source: 'payment', method: 'POST', headers: rawHeaders, body: fullBody,
-        matched_topup_id: topup._id, matched_user_email: userProfile.email,
+        matched_topup_id: topup._id, matched_user_email: userEmail,
         result: 'success',
-        result_message: `Credited ${topup.type === 'plan' ? `plan ${topup.plan_name}` : `$${topup.usd_amount}`} to ${userProfile.email}`,
+        result_message: `Approved ${topup.type === 'plan' ? `plan ${topup.plan_name}` : `$${topup.usd_amount}`} for ${userEmail}${ezaiCredited ? '' : ' (EzAI pending)'}`,
         ip,
     })
 
-    console.log(`[Webhook] #${log._id} ✅ Auto-approved topup ${topup._id} for ${userProfile.email}`)
+    console.log(`[Webhook] #${log._id} ✅ Auto-approved topup ${topup._id} for ${userEmail}`)
 
     return {
         success: true,
-        message: 'Payment verified and credited',
+        message: 'Payment verified and approved',
         topup_id: topup._id.toString(),
-        user_email: userProfile.email,
+        user_email: userEmail,
         vnd_amount: topup.vnd_amount,
+        ezai_credited: ezaiCredited,
     }
 }
