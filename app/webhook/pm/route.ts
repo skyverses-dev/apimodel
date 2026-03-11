@@ -24,16 +24,6 @@ import { ezai } from '@/lib/ezai/client'
  */
 export async function POST(request: Request) {
     try {
-        // Verify webhook secret (if configured)
-        const webhookSecret = process.env.WEBHOOK_SECRET
-        if (webhookSecret) {
-            const authHeader = request.headers.get('authorization') || request.headers.get('x-webhook-secret')
-            const token = authHeader?.replace('Bearer ', '')
-            if (token !== webhookSecret) {
-                return NextResponse.json({ error: 'Invalid webhook secret' }, { status: 401 })
-            }
-        }
-
         const body = await request.json()
 
         // Extract transfer content (support multiple field names)
