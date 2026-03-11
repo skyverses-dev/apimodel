@@ -30,8 +30,16 @@ export async function POST(request: Request) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    if (!profile.user_code) {
-      return NextResponse.json({ error: 'Tài khoản chưa được kích hoạt. Liên hệ admin.' }, { status: 400 })
+    // Auto-generate user_code if missing
+    let userCode = profile.user_code
+    if (!userCode) {
+      const lastUser = await User.findOne({ user_code: { $ne: null } })
+        .sort({ user_code: -1 })
+        .select('user_code')
+        .lean()
+      const lastNum = lastUser?.user_code ? parseInt(lastUser.user_code.replace('U', ''), 10) : 0
+      userCode = `U${String(lastNum + 1).padStart(4, '0')}`
+      await User.findByIdAndUpdate(session.userId, { user_code: userCode })
     }
 
     const exchangeRate = settings?.exchange_rate || 26000
@@ -40,7 +48,7 @@ export async function POST(request: Request) {
     const usdAmount = vnd_amount / exchangeRate
     const creditAmount = isPlan ? 0 : usdAmount * leverage
 
-    const transferContent = generateTransferContent(profile.user_code)
+    const transferContent = generateTransferContent(userCode)
 
     // Check if identical pending request exists
     const existingRequest = await TopupRequest.findOne({
