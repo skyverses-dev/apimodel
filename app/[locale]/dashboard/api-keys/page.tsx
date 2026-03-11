@@ -102,13 +102,11 @@ export default async function ApiKeysPage() {
               <CardTitle className="text-white">{t('apiKeys.howToUse')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Badge className="mb-2 bg-blue-600/20 text-blue-300">Python</Badge>
-                <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
-                  {`from openai import OpenAI
+              {(() => {
+                const pythonCode = `from openai import OpenAI
 
 client = OpenAI(
-    api_key="${apiKey.slice(0, 10)}...",
+    api_key="${apiKey}",
     base_url="${apiKeyDisplay}/v1"
 )
 
@@ -116,16 +114,12 @@ response = client.chat.completions.create(
     model="claude-sonnet-4-5",
     messages=[{"role": "user", "content": "Hello!"}]
 )
-print(response.choices[0].message.content)`}
-                </pre>
-              </div>
-              <div>
-                <Badge className="mb-2 bg-yellow-600/20 text-yellow-300">Node.js</Badge>
-                <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
-                  {`import OpenAI from 'openai'
+print(response.choices[0].message.content)`
+
+                const nodeCode = `import OpenAI from 'openai'
 
 const client = new OpenAI({
-  apiKey: '${apiKey.slice(0, 10)}...',
+  apiKey: '${apiKey}',
   baseURL: '${apiKeyDisplay}/v1'
 })
 
@@ -133,21 +127,48 @@ const res = await client.chat.completions.create({
   model: 'claude-sonnet-4-5',
   messages: [{ role: 'user', content: 'Hello!' }]
 })
-console.log(res.choices[0].message.content)`}
-                </pre>
-              </div>
-              <div>
-                <Badge className="mb-2 bg-green-600/20 text-green-300">cURL</Badge>
-                <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
-                  {`curl ${apiKeyDisplay}/v1/chat/completions \\
-  -H "Authorization: Bearer ${apiKey.slice(0, 10)}..." \\
+console.log(res.choices[0].message.content)`
+
+                const curlCode = `curl ${apiKeyDisplay}/v1/chat/completions \\
+  -H "Authorization: Bearer ${apiKey}" \\
   -H "Content-Type: application/json" \\
   -d '{
     "model": "claude-sonnet-4-5",
     "messages": [{"role":"user","content":"Hello!"}]
-  }'`}
-                </pre>
-              </div>
+  }'`
+
+                return (
+                  <>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className="bg-blue-600/20 text-blue-300">Python</Badge>
+                        <CopyButton text={pythonCode} />
+                      </div>
+                      <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
+                        {pythonCode}
+                      </pre>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className="bg-yellow-600/20 text-yellow-300">Node.js</Badge>
+                        <CopyButton text={nodeCode} />
+                      </div>
+                      <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
+                        {nodeCode}
+                      </pre>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className="bg-green-600/20 text-green-300">cURL</Badge>
+                        <CopyButton text={curlCode} />
+                      </div>
+                      <pre className="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs overflow-x-auto border border-white/10">
+                        {curlCode}
+                      </pre>
+                    </div>
+                  </>
+                )
+              })()}
             </CardContent>
           </Card>
         </div>
