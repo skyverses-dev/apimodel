@@ -14,6 +14,9 @@ const ZERO_USAGE: UsageData = {
   transactions: [],
   monthly_topup_vnd: 0,
   monthly_topup_credit: 0,
+  spending_today: 0,
+  requests_today: 0,
+  spending_30d: 0,
 }
 
 export async function GET() {
@@ -33,8 +36,9 @@ export async function GET() {
     // Start of current month
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    const [ezaiUserResult, ezaiTxResult, topups] = await Promise.allSettled([
+    const [ezaiUserResult, ezaiTxResult, topups, usageLogs] = await Promise.allSettled([
       ezai.getUser(ezaiUserId),
       ezai.getTransactions(ezaiUserId, 20),
       TopupRequest.find({
@@ -42,13 +46,36 @@ export async function GET() {
         status: 'approved',
         approved_at: { $gte: monthStart },
       }).select('vnd_amount credit_amount').lean(),
+      ezai.getUsage(ezaiUserId, 500),
     ])
 
     const ezaiUser = ezaiUserResult.status === 'fulfilled' ? ezaiUserResult.value : null
     const userTx = ezaiTxResult.status === 'fulfilled' ? ezaiTxResult.value.transactions : []
     const monthlyTopups = topups.status === 'fulfilled' ? topups.value : []
+    const usage = usageLogs.status === 'fulfilled' ? usageLogs.value.usage : []
+
     const monthly_topup_vnd = monthlyTopups.reduce((s, t) => s + Number(t.vnd_amount), 0)
     const monthly_topup_credit = monthlyTopups.reduce((s, t) => s + Number(t.credit_amount), 0)
+
+    // Compute spending stats from usage logs
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+    let spending_today = 0
+    let requests_today = 0
+    let spending_30d = 0
+
+    for (const log of usage) {
+      const logDate = new Date(log.created_at)
+      const cost = log.cost || 0
+
+      if (logDate >= todayStart) {
+        spending_today += cost
+        requests_today += 1
+      }
+      if (logDate >= thirtyDaysAgo) {
+        spending_30d += cost
+      }
+    }
 
     const result: UsageData = {
       balance: ezaiUser?.balance ?? 0,
@@ -59,6 +86,9 @@ export async function GET() {
       transactions: userTx,
       monthly_topup_vnd,
       monthly_topup_credit,
+      spending_today,
+      requests_today,
+      spending_30d,
     }
 
     return NextResponse.json(result)

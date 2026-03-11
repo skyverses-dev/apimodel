@@ -14,9 +14,14 @@ export function LiveStats() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Skeleton className="h-28 rounded-xl bg-white/5" />
-        <Skeleton className="h-28 rounded-xl bg-white/5" />
+      <div className="space-y-6">
+        <Skeleton className="h-44 rounded-xl bg-white/5" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Skeleton className="h-24 rounded-xl bg-white/5" />
+          <Skeleton className="h-24 rounded-xl bg-white/5" />
+          <Skeleton className="h-24 rounded-xl bg-white/5" />
+          <Skeleton className="h-24 rounded-xl bg-white/5" />
+        </div>
       </div>
     )
   }
@@ -27,5 +32,5 @@ export function LiveStats() {
     )
   }
 
-  return <UsageStats data={data} compact={true} />
+  return <UsageStats data={data} compact={false} />
 }

@@ -94,6 +94,9 @@ export interface UsageData {
   transactions: EzaiTransaction[]
   monthly_topup_vnd: number
   monthly_topup_credit: number
+  spending_today: number
+  requests_today: number
+  spending_30d: number
 }
 
 export interface AdminUserStat {
