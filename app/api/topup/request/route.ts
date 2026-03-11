@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const { vnd_amount, plan_name } = body
     const isPlan = !!plan_name
 
-    if (!vnd_amount || vnd_amount < 50000) {
+    if (!vnd_amount || (!isPlan && vnd_amount < 50000)) {
       return NextResponse.json({ error: 'Minimum 50,000 VND' }, { status: 400 })
     }
 
