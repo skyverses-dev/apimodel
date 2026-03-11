@@ -26,7 +26,7 @@ export default async function AdminUsersPage() {
     <div className="p-8">
       <h1 className="text-3xl font-bold text-white mb-2">Quản lý người dùng</h1>
       <p className="text-slate-400 mb-8">
-        Danh sách người dùng và trạng thái tài khoản EzAI
+        Danh sách người dùng và trạng thái tài khoản 2BRAIN
       </p>
 
       <Card className="bg-white/5 border-white/10">

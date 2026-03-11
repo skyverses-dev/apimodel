@@ -284,7 +284,7 @@ export function UsageStats({ data, compact = false }: UsageStatsProps) {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white text-base flex items-center gap-2">
               <Calendar size={16} className="text-purple-400" />
-              Lịch sử giao dịch EzAI
+              Lịch sử giao dịch 2BRAIN
             </CardTitle>
             <span className="text-xs text-slate-500">{transactions.length} gần nhất</span>
           </CardHeader>

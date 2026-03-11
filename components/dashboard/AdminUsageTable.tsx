@@ -15,10 +15,10 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 function PlanBadge({ plan }: { plan: string }) {
   const map: Record<string, { label: string; className: string }> = {
     starter: { label: 'Starter', className: 'bg-blue-500/20 text-blue-300' },
-    pro:     { label: 'Pro',     className: 'bg-purple-500/20 text-purple-300' },
-    max:     { label: 'Max',     className: 'bg-orange-500/20 text-orange-300' },
-    ultra:   { label: 'Ultra',   className: 'bg-pink-500/20 text-pink-300' },
-    none:    { label: 'No Plan', className: 'bg-slate-500/20 text-slate-400' },
+    pro: { label: 'Pro', className: 'bg-purple-500/20 text-purple-300' },
+    max: { label: 'Max', className: 'bg-orange-500/20 text-orange-300' },
+    ultra: { label: 'Ultra', className: 'bg-pink-500/20 text-pink-300' },
+    none: { label: 'No Plan', className: 'bg-slate-500/20 text-slate-400' },
   }
   const cfg = map[plan] ?? map['none']
   return (
@@ -83,7 +83,7 @@ export function AdminUsageTable() {
         {data && !isLoading && (
           <>
             {data.stats.length === 0 ? (
-              <p className="text-slate-500 text-sm text-center py-8">Chưa có user nào được kích hoạt EzAI</p>
+              <p className="text-slate-500 text-sm text-center py-8">Chưa có user nào được kích hoạt 2BRAIN</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

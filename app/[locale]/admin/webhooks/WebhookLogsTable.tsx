@@ -23,7 +23,7 @@ const RESULT_CONFIG: Record<string, { label: string; color: string; icon: typeof
     no_match: { label: 'Không khớp', color: 'bg-slate-500/15 text-slate-400 border-slate-500/30', icon: XCircle },
     error: { label: 'Lỗi', color: 'bg-red-500/15 text-red-400 border-red-500/30', icon: XCircle },
     amount_mismatch: { label: 'Sai số tiền', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30', icon: AlertTriangle },
-    no_ezai: { label: 'Chưa có EzAI', color: 'bg-orange-500/15 text-orange-400 border-orange-500/30', icon: AlertTriangle },
+    no_ezai: { label: 'Chưa có 2BRAIN', color: 'bg-orange-500/15 text-orange-400 border-orange-500/30', icon: AlertTriangle },
 }
 
 function LogRow({ log }: { log: WebhookLogItem }) {

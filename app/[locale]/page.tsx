@@ -70,7 +70,7 @@ export default function LandingPage() {
       {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 pt-24 pb-16 text-center">
         <Badge className="mb-6 bg-purple-500/20 text-purple-300 border-purple-500/30 animate-[fadeUp_0.5s_ease-out]">
-          🚀 Powered by EzAI
+          🚀 Powered by 2BRAIN
         </Badge>
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-[fadeUp_0.6s_ease-out]">
           AI Credits{' '}

@@ -10,10 +10,10 @@ import { resellerApiBase, aiBaseUrl } from '@/lib/config'
 const resellerBase = resellerApiBase
 
 const plans = [
-  { name: 'starter', price: '$10/month', daily: '$35/day', rpm: 30,  concurrent: 5  },
-  { name: 'pro',     price: '$20/month', daily: '$80/day', rpm: 60,  concurrent: 10 },
-  { name: 'max',     price: '$40/month', daily: '$180/day', rpm: 90, concurrent: 15 },
-  { name: 'ultra',   price: '$80/month', daily: '$400/day', rpm: 120, concurrent: 20 },
+  { name: 'starter', price: '$10/month', daily: '$35/day', rpm: 30, concurrent: 5 },
+  { name: 'pro', price: '$20/month', daily: '$80/day', rpm: 60, concurrent: 10 },
+  { name: 'max', price: '$40/month', daily: '$180/day', rpm: 90, concurrent: 15 },
+  { name: 'ultra', price: '$80/month', daily: '$400/day', rpm: 120, concurrent: 20 },
 ]
 
 const errorCodes = [
@@ -108,8 +108,8 @@ export default function ResellerDocsPage() {
         {/* Quick nav */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { href: '#auth',    label: 'Authentication', color: 'text-pink-400' },
-            { href: '#users',   label: 'User Management', color: 'text-blue-400' },
+            { href: '#auth', label: 'Authentication', color: 'text-pink-400' },
+            { href: '#users', label: 'User Management', color: 'text-blue-400' },
             { href: '#billing', label: 'Billing & Plans', color: 'text-green-400' },
             { href: '#analytics', label: 'Analytics', color: 'text-yellow-400' },
           ].map(({ href, label, color }) => (
@@ -165,10 +165,9 @@ export default function ResellerDocsPage() {
                   {errorCodes.map((e) => (
                     <tr key={e.status} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-2.5">
-                        <code className={`font-mono font-bold text-xs ${
-                          e.status === '200' || e.status === '201' ? 'text-green-400' :
-                          e.status.startsWith('4') ? 'text-red-400' : 'text-orange-400'
-                        }`}>{e.status}</code>
+                        <code className={`font-mono font-bold text-xs ${e.status === '200' || e.status === '201' ? 'text-green-400' :
+                            e.status.startsWith('4') ? 'text-red-400' : 'text-orange-400'
+                          }`}>{e.status}</code>
                       </td>
                       <td className="px-4 py-2.5 text-slate-300">{e.meaning}</td>
                     </tr>
@@ -351,13 +350,13 @@ export default function ResellerDocsPage() {
         <Link href={`${aiBaseUrl}/reseller`} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
           <Globe size={14} />
-          EzAI Reseller Panel
+          2BRAIN Reseller Panel
           <ExternalLink size={12} />
         </Link>
         <Link href={aiBaseUrl} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
           <BookOpen size={14} />
-          EzAI Docs
+          2BRAIN Docs
           <ExternalLink size={12} />
         </Link>
       </div>

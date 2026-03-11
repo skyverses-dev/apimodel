@@ -34,7 +34,7 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
       if (!res.ok) throw new Error(data.error)
 
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u))
-      toast.success('Đã tạo tài khoản EzAI cho user!')
+      toast.success('Đã tạo tài khoản 2BRAIN cho user!')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Lỗi tạo tài khoản')
     } finally {
@@ -47,7 +47,7 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/10">
-            {['User', 'Email', 'Mã user', 'EzAI', 'Đòn bẩy', 'Ngày tạo', ''].map(h => (
+            {['User', 'Email', 'Mã user', '2BRAIN', 'Đòn bẩy', 'Ngày tạo', ''].map(h => (
               <th key={h} className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wider">{h}</th>
             ))}
           </tr>
