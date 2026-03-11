@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
 
-const EZAI_BASE = 'https://ezaiapi.com'
+const EZAI_BASE = process.env.EZAI_BASE_URL || 'https://api-v2.itera102.cloud'
 
 /**
- * Proxy all requests: /v1/* → ezaiapi.com/v1/*
+ * Proxy all requests: /v1/* → api-v2.itera102.cloud/v1/*
  * Supports both regular JSON and streaming (SSE) responses
  */
 export async function POST(

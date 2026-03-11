@@ -1,6 +1,6 @@
 import { EzaiUser, EzaiTransaction, EzaiApiKey, EzaiStats, EzaiUsageLog } from '@/types'
 
-const BASE = process.env.EZAI_BASE_URL || process.env.NEXT_PUBLIC_AI_BASE_URL || 'https://ezaiapi.com'
+const BASE = process.env.EZAI_BASE_URL || process.env.NEXT_PUBLIC_AI_BASE_URL || 'https://api-v2.itera102.cloud'
 const KEY = process.env.EZAI_RESELLER_KEY!
 
 async function ezaiFetch(path: string, options: RequestInit = {}) {
