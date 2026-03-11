@@ -15,6 +15,15 @@ NC='\033[0m'
 ADMIN_EMAIL="xvirion@gmail.com"
 DB_NAME="2brain"
 
+# Read MongoDB URI from .env.local
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/../.env.local"
+
+if [ -f "$ENV_FILE" ]; then
+  MONGO_URI=$(grep '^MONGODB_URI=' "$ENV_FILE" | cut -d'=' -f2-)
+fi
+MONGO_URI="${MONGO_URI:-mongodb://localhost:27017/$DB_NAME}"
+
 echo ""
 echo -e "${CYAN}══════════════════════════════════════${NC}"
 echo -e "${CYAN}   🧹 2BRAIN Database Cleanup${NC}"
@@ -39,7 +48,7 @@ fi
 
 echo ""
 
-mongosh --quiet --eval "
+mongosh "$MONGO_URI" --quiet --eval "
   use('${DB_NAME}');
 
   const admin = db.users.findOne({ email: '${ADMIN_EMAIL}' });
