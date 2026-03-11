@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Loader2, Save, TrendingUp, Building2, Calendar } from 'lucide-react'
+import { Loader2, Save, TrendingUp, Building2, Calendar, Globe } from 'lucide-react'
 
 interface SettingsFormProps {
   initial: {
@@ -17,6 +17,7 @@ interface SettingsFormProps {
     bank_holder: string
     bank_bin: string
     min_topup_vnd: string
+    ai_base_url: string
     plan_starter_vnd: string
     plan_pro_vnd: string
     plan_max_vnd: string
@@ -52,6 +53,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
         plan_max_vnd: Number(values.plan_max_vnd),
         plan_ultra_vnd: Number(values.plan_ultra_vnd),
         min_topup_vnd: Number(values.min_topup_vnd),
+        ai_base_url: values.ai_base_url,
         plan_starter_limit: values.plan_starter_limit,
         plan_pro_limit: values.plan_pro_limit,
         plan_max_limit: values.plan_max_limit,
@@ -132,6 +134,31 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
               {' → '}<strong className="text-blue-300">${previewUsd.toFixed(4)} USD</strong>
               {' → '}<strong className="text-green-300">+${previewCredit.toFixed(2)} credit</strong>
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Base URL */}
+      <Card className="bg-white/5 border-white/10">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Globe size={18} className="text-cyan-400" />
+            API Base URL
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Domain hiển thị cho user trong trang API Keys và Docs. Không ảnh hưởng backend.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label className="text-slate-300">Base URL (hiển thị cho user)</Label>
+            <Input
+              value={values.ai_base_url}
+              onChange={e => update('ai_base_url', e.target.value)}
+              className="bg-white/5 border-white/10 text-white font-mono"
+              placeholder="https://api-v2.itera102.cloud"
+            />
+            <p className="text-xs text-slate-500">User sẽ thấy URL này trong API Keys và code examples</p>
           </div>
         </CardContent>
       </Card>

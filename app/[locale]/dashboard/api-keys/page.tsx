@@ -1,5 +1,5 @@
 import connectDB from '@/lib/db/mongodb'
-import { User } from '@/lib/db/models'
+import { User, Settings } from '@/lib/db/models'
 import { getSession } from '@/lib/auth'
 import { getTranslations } from 'next-intl/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge'
 import { Key } from 'lucide-react'
 import CopyButton from './CopyButton'
 import { ezai } from '@/lib/ezai/client'
-import { aiBaseUrl } from '@/lib/config'
 
 export default async function ApiKeysPage() {
   const t = await getTranslations()
@@ -15,9 +14,12 @@ export default async function ApiKeysPage() {
   if (!session) return null
 
   await connectDB()
-  const profile = await User.findById(session.userId).lean()
+  const [profile, settings] = await Promise.all([
+    User.findById(session.userId).lean(),
+    Settings.findOne().lean(),
+  ])
 
-  const baseUrl = aiBaseUrl
+  const baseUrl = settings?.ai_base_url || 'https://ezaiapi.com'
 
   // Try to get live key from EzAI; fall back to stored key
   let apiKey: string | null = profile?.ezai_api_key ?? null
@@ -39,7 +41,7 @@ export default async function ApiKeysPage() {
     }
   }
 
-  const apiKeyDisplay = aiBaseUrl
+  const apiKeyDisplay = baseUrl
 
   return (
     <div className="p-8 max-w-3xl">

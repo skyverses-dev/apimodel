@@ -1,5 +1,5 @@
 import connectDB from '@/lib/db/mongodb'
-import { User } from '@/lib/db/models'
+import { User, Settings } from '@/lib/db/models'
 import { getSession } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,9 +8,7 @@ import {
   Terminal, CheckCircle, Clock, ChevronRight, Cpu
 } from 'lucide-react'
 import Link from 'next/link'
-import { aiBaseUrl } from '@/lib/config'
 
-const aiBase = aiBaseUrl
 
 const models = [
   // Claude
@@ -127,10 +125,15 @@ export default async function DocsPage() {
   const session = await getSession()
 
   let apiKey = 'YOUR_API_KEY'
+  let aiBase = 'https://ezaiapi.com'
   if (session) {
     await connectDB()
-    const profile = await User.findById(session.userId).select('ezai_api_key').lean()
+    const [profile, settings] = await Promise.all([
+      User.findById(session.userId).select('ezai_api_key').lean(),
+      Settings.findOne().lean(),
+    ])
     if (profile?.ezai_api_key) apiKey = profile.ezai_api_key
+    if (settings?.ai_base_url) aiBase = settings.ai_base_url
   }
 
   return (
