@@ -19,6 +19,7 @@ interface Settings {
   bank_name: string
   bank_holder: string
   bank_bin: string
+  min_topup_vnd: number
   plan_starter_vnd: number
   plan_pro_vnd: number
   plan_max_vnd: number
@@ -192,6 +193,7 @@ export default function TopupPage() {
   const vnd = Number(amount) || 0
   const usd = settings ? vndToUsd(vnd, settings.exchange_rate) : 0
   const credit = settings ? usdToCredit(usd, settings.user_leverage) : 0
+  const minVnd = settings?.min_topup_vnd || 50000
 
   const planPrice = (plan: string) => {
     if (!settings) return 0
@@ -206,7 +208,7 @@ export default function TopupPage() {
   }
 
   async function handleCreateCredit() {
-    if (vnd < 50000) { toast.error(t('topup.minAmount')); return }
+    if (vnd < minVnd) { toast.error(`Tối thiểu ${minVnd.toLocaleString()} VND`); return }
     setLoading(true)
     try {
       const res = await fetch('/api/topup/request', {
@@ -309,14 +311,14 @@ export default function TopupPage() {
               value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder={t('topup.amountPlaceholder')}
-              min={50000}
+              min={minVnd}
               className="bg-slate-800/50 border-slate-700/50 text-white text-lg h-12 placeholder:text-slate-600 focus:border-purple-500/50"
             />
             {vnd > 0 && <p className="text-slate-500 text-xs mt-1.5">{formatVND(vnd)}</p>}
           </div>
 
           {/* Calculation preview */}
-          {vnd >= 50000 && settings && (
+          {vnd >= minVnd && settings && (
             <Card className="bg-slate-800/30 border-slate-700/40 overflow-hidden">
               <CardContent className="p-0">
                 <div className="px-5 py-3 bg-slate-800/50 border-b border-slate-700/30">
@@ -348,7 +350,7 @@ export default function TopupPage() {
           {/* Submit */}
           <Button
             onClick={handleCreateCredit}
-            disabled={loading || vnd < 50000}
+            disabled={loading || vnd < minVnd}
             className="w-full bg-purple-600 hover:bg-purple-500 py-6 text-base font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/20"
           >
             {loading ? t('common.loading') : (
@@ -357,7 +359,7 @@ export default function TopupPage() {
               </span>
             )}
           </Button>
-          {vnd > 0 && vnd < 50000 && (
+          {vnd > 0 && vnd < minVnd && (
             <p className="text-red-400 text-xs text-center">{t('topup.minAmount')}</p>
           )}
         </div>

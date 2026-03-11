@@ -21,6 +21,7 @@ export default async function AdminSettingsPage() {
           bank_name: settings?.bank_name || '',
           bank_holder: settings?.bank_holder || '',
           bank_bin: settings?.bank_bin || '',
+          min_topup_vnd: String(settings?.min_topup_vnd || '50000'),
           plan_starter_vnd: String(settings?.plan_starter_vnd || '299000'),
           plan_pro_vnd: String(settings?.plan_pro_vnd || '599000'),
           plan_max_vnd: String(settings?.plan_max_vnd || '999000'),

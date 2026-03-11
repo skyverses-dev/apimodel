@@ -16,6 +16,7 @@ interface SettingsFormProps {
     bank_name: string
     bank_holder: string
     bank_bin: string
+    min_topup_vnd: string
     plan_starter_vnd: string
     plan_pro_vnd: string
     plan_max_vnd: string
@@ -50,6 +51,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
         plan_pro_vnd: Number(values.plan_pro_vnd),
         plan_max_vnd: Number(values.plan_max_vnd),
         plan_ultra_vnd: Number(values.plan_ultra_vnd),
+        min_topup_vnd: Number(values.min_topup_vnd),
         plan_starter_limit: values.plan_starter_limit,
         plan_pro_limit: values.plan_pro_limit,
         plan_max_limit: values.plan_max_limit,
@@ -109,6 +111,17 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
               placeholder="30"
             />
             <p className="text-xs text-slate-500">User nạp 1 USD → nhận {values.user_leverage} USD credit</p>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-slate-300">Nạp tối thiểu (VND)</Label>
+            <Input
+              type="number"
+              value={values.min_topup_vnd}
+              onChange={e => update('min_topup_vnd', e.target.value)}
+              className="bg-white/5 border-white/10 text-white"
+              placeholder="50000"
+            />
+            <p className="text-xs text-slate-500">Số tiền tối thiểu khi nạp credit</p>
           </div>
 
           {/* Preview */}

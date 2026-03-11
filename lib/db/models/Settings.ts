@@ -8,6 +8,7 @@ export interface ISettings {
     bank_name: string
     bank_holder: string
     bank_bin: string
+    min_topup_vnd: number
     // Plan pricing (VND)
     plan_starter_vnd: number
     plan_pro_vnd: number
@@ -29,6 +30,7 @@ const SettingsSchema = new Schema<ISettings>(
         bank_name: { type: String, default: '' },
         bank_holder: { type: String, default: '' },
         bank_bin: { type: String, default: '' },
+        min_topup_vnd: { type: Number, default: 50000 },
         plan_starter_vnd: { type: Number, default: 299000 },
         plan_pro_vnd: { type: Number, default: 599000 },
         plan_max_vnd: { type: Number, default: 999000 },

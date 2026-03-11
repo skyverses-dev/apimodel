@@ -13,8 +13,8 @@ export async function POST(request: Request) {
     const { vnd_amount, plan_name } = body
     const isPlan = !!plan_name
 
-    if (!vnd_amount || (!isPlan && vnd_amount < 50000)) {
-      return NextResponse.json({ error: 'Minimum 50,000 VND' }, { status: 400 })
+    if (!vnd_amount || vnd_amount <= 0) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
     }
 
     if (isPlan && !['starter', 'pro', 'max', 'ultra'].includes(plan_name)) {
@@ -44,6 +44,12 @@ export async function POST(request: Request) {
 
     const exchangeRate = settings?.exchange_rate || 26000
     const leverage = profile.leverage || settings?.user_leverage || 30
+    const minTopup = settings?.min_topup_vnd || 50000
+
+    // Min amount check (only for credit, not plan)
+    if (!isPlan && vnd_amount < minTopup) {
+      return NextResponse.json({ error: `Tối thiểu ${minTopup.toLocaleString()} VND` }, { status: 400 })
+    }
 
     const usdAmount = vnd_amount / exchangeRate
     const creditAmount = isPlan ? 0 : usdAmount * leverage
