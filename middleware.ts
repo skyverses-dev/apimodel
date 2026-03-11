@@ -15,9 +15,10 @@ const intlMiddleware = createMiddleware({
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip API routes and static files
+  // Skip API routes, webhooks, and static files
   if (
     pathname.startsWith('/api') ||
+    pathname.startsWith('/webhook') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon')
   ) {
