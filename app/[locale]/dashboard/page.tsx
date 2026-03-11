@@ -132,12 +132,22 @@ export default async function DashboardPage() {
             <div className="space-y-3">
               {recent.map((topup) => (
                 <div key={topup._id.toString()} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <div>
-                    <p className="text-sm text-white">{topup.transfer_content}</p>
-                    <p className="text-xs text-slate-500">{new Date(topup.created_at).toLocaleString(locale)}</p>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${topup.type === 'plan'
+                        ? 'bg-pink-500/20 text-pink-300'
+                        : 'bg-blue-500/20 text-blue-300'
+                      }`}>
+                      {topup.type === 'plan' ? `Gói ${topup.plan_name}` : 'Credit'}
+                    </span>
+                    <div>
+                      <p className="text-sm text-white">{formatVND(topup.vnd_amount)}</p>
+                      <p className="text-xs text-slate-500">{new Date(topup.created_at).toLocaleString(locale)}</p>
+                    </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-green-400">+{formatUSD(topup.credit_amount)}</p>
+                    <p className="text-sm text-green-400">
+                      {topup.type === 'plan' ? topup.plan_name?.toUpperCase() : `+${formatUSD(topup.credit_amount)}`}
+                    </p>
                     <Badge
                       variant={topup.status === 'approved' ? 'default' : topup.status === 'rejected' ? 'destructive' : 'secondary'}
                       className="text-xs"
