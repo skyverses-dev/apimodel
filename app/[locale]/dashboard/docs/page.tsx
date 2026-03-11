@@ -147,15 +147,15 @@ export default async function DocsPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">API Documentation</h1>
-            <p className="text-slate-400 mt-1">EzAI API — 20+ models, one endpoint</p>
+            <p className="text-slate-400 mt-1">2BRAIN API — 20+ models, one endpoint</p>
           </div>
         </div>
 
-        {/* What is EzAI */}
+        {/* What is 2BRAIN */}
         <Card className="bg-gradient-to-br from-purple-900/30 to-slate-800/30 border-purple-500/20">
           <CardContent className="p-6">
             <p className="text-slate-300 leading-relaxed">
-              EzAI API is a unified AI gateway that gives you access to{' '}
+              2BRAIN API is a unified AI gateway that gives you access to{' '}
               <span className="text-purple-300 font-medium">20+ models</span> from Anthropic, OpenAI,
               Google, and xAI through a single endpoint. Fully compatible with{' '}
               <span className="text-white font-medium">Claude Code, Cursor, Cline</span>, and any
@@ -433,7 +433,7 @@ export default async function DocsPage() {
               <p className="text-xs text-slate-400 mt-1">Cloudflare blocks the default <code className="text-slate-300">User-Agent: OpenAI/Python</code> header with a 403. Set a custom User-Agent.</p>
             </CardHeader>
             <CardContent>
-              <CodeBlock lang="python" code={`# pip install openai\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url="${aiBase}/v1",\n    api_key="${apiKey}",\n    default_headers={"User-Agent": "EzAI/1.0"}  # Required!\n)\n\nresponse = client.chat.completions.create(\n    model="claude-sonnet-4-5",\n    messages=[\n        {"role": "system", "content": "You are helpful."},\n        {"role": "user", "content": "Hello!"}\n    ],\n    max_tokens=1024\n)\nprint(response.choices[0].message.content)`} />
+              <CodeBlock lang="python" code={`# pip install openai\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url="${aiBase}/v1",\n    api_key="${apiKey}",\n    default_headers={"User-Agent": "2BRAIN/1.0"}  # Required!\n)\n\nresponse = client.chat.completions.create(\n    model="claude-sonnet-4-5",\n    messages=[\n        {"role": "system", "content": "You are helpful."},\n        {"role": "user", "content": "Hello!"}\n    ],\n    max_tokens=1024\n)\nprint(response.choices[0].message.content)`} />
             </CardContent>
           </Card>
         </div>
@@ -590,7 +590,7 @@ export default async function DocsPage() {
             {
               title: '403 Forbidden with OpenAI SDK',
               desc: 'Cloudflare WAF blocks the default User-Agent: OpenAI/Python header. Set a custom User-Agent:',
-              code: `client = OpenAI(\n    base_url="${aiBase}/v1",\n    api_key="${apiKey}",\n    default_headers={"User-Agent": "EzAI/1.0"}\n)`,
+              code: `client = OpenAI(\n    base_url="${aiBase}/v1",\n    api_key="${apiKey}",\n    default_headers={"User-Agent": "2BRAIN/1.0"}\n)`,
               lang: 'python'
             },
             {
@@ -661,7 +661,7 @@ export default async function DocsPage() {
             },
             {
               month: 'Dec 2025',
-              items: ['🚀 EzAI API launch'],
+              items: ['🚀 2BRAIN API launch'],
               launch: true
             }
           ].map(({ month, items, launch }) => (
@@ -693,7 +693,7 @@ export default async function DocsPage() {
         <Link href={aiBase} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
           <Globe size={14} />
-          EzAI Docs
+          2BRAIN Docs
           <ExternalLink size={12} />
         </Link>
       </div>
