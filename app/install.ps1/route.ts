@@ -8,7 +8,9 @@ import { NextRequest } from 'next/server'
  */
 export async function GET(request: NextRequest) {
     const key = request.nextUrl.searchParams.get('key') || 'YOUR_API_KEY'
-    const baseUrl = request.nextUrl.origin
+    const proto = request.headers.get('x-forwarded-proto') || 'https'
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'api-v2.itera102.cloud'
+    const baseUrl = `${proto}://${host}`
 
     const script = `# ============================================
 #  2BRAIN API — Quick Setup Script (Windows)
