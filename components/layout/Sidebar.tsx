@@ -43,7 +43,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
   const adminNav = [
     { href: `/${locale}/admin`, icon: ShieldCheck, label: t('nav.admin') },
     { href: `/${locale}/admin/users`, icon: Users, label: t('nav.users') },
-    { href: `/${locale}/admin/ezai-users`, icon: Activity, label: '2BRAIN Users' },
+    { href: `/${locale}/admin/ezai-users`, icon: Activity, label: 'Người dùng Ezapi' },
     { href: `/${locale}/admin/topups`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/admin/transactions`, icon: History, label: t('nav.transactions') },
     { href: `/${locale}/admin/webhooks`, icon: Globe, label: 'Webhooks' },
