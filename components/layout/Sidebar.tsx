@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { RbUser } from '@/types'
 import {
-  LayoutDashboard, Wallet, History, Key, BookOpen,
+  LayoutDashboard, Wallet, History, Key, BookOpen, Activity,
   Users, Settings, LogOut, ChevronRight, Globe, ShieldCheck
 } from 'lucide-react'
 
@@ -34,6 +34,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
 
   const userNav = [
     { href: `/${locale}/dashboard`, icon: LayoutDashboard, label: t('nav.dashboard') },
+    { href: `/${locale}/dashboard/usage-history`, icon: Activity, label: 'Usage History' },
     { href: `/${locale}/dashboard/topup`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/dashboard/transactions`, icon: History, label: t('nav.transactions') },
     { href: `/${locale}/dashboard/api-keys`, icon: Key, label: t('nav.apiKeys') },
