@@ -160,9 +160,10 @@ function RateLimitCard({ label, value, used, total, color }: {
 interface UsageStatsProps {
   data: UsageData
   compact?: boolean
+  hideTransactions?: boolean
 }
 
-export function UsageStats({ data, compact = false }: UsageStatsProps) {
+export function UsageStats({ data, compact = false, hideTransactions = false }: UsageStatsProps) {
   const {
     balance, plan_type, daily_limit, daily_used, plan_expires_at,
     transactions, spending_today, requests_today, spending_30d,
@@ -279,7 +280,7 @@ export function UsageStats({ data, compact = false }: UsageStatsProps) {
       )}
 
       {/* ─── Transactions table (full mode only) ───────────────────────── */}
-      {!compact && (
+      {!compact && !hideTransactions && (
         <Card className="bg-[#0d1117] border-white/10">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white text-base flex items-center gap-2">

@@ -68,7 +68,7 @@ export default function DashboardPage() {
       )}
 
       {/* Content */}
-      {data && !isLoading && <UsageStats data={data} compact={false} />}
+      {data && !isLoading && <UsageStats data={data} compact={false} hideTransactions />}
 
       {/* Footer */}
       <p className="text-xs text-slate-600 mt-8 text-center">
