@@ -74,7 +74,8 @@ function UsagePanel({ ezaiUserId }: { ezaiUserId: string }) {
     }
 
     const totalCost = usage.reduce((s, u) => s + (u.cost || 0), 0)
-    const totalTokens = usage.reduce((s, u) => s + (u.total_tokens || 0), 0)
+    const totalInput = usage.reduce((s, u) => s + (u.input_tokens || 0), 0)
+    const totalOutput = usage.reduce((s, u) => s + (u.output_tokens || 0), 0)
 
     return (
         <div className="space-y-3">
@@ -82,7 +83,9 @@ function UsagePanel({ ezaiUserId }: { ezaiUserId: string }) {
             <div className="flex items-center gap-4 text-xs text-slate-400">
                 <span>{usage.length} requests</span>
                 <span>·</span>
-                <span>{formatTokens(totalTokens)} tokens</span>
+                <span>In: {formatTokens(totalInput)}</span>
+                <span>·</span>
+                <span>Out: {formatTokens(totalOutput)}</span>
                 <span>·</span>
                 <span className="text-green-400">${totalCost.toFixed(4)}</span>
             </div>
@@ -94,10 +97,12 @@ function UsagePanel({ ezaiUserId }: { ezaiUserId: string }) {
                         <tr className="border-b border-white/10">
                             <th className="text-left text-slate-500 font-medium py-2 pr-3">Thời gian</th>
                             <th className="text-left text-slate-500 font-medium py-2 pr-3">Model</th>
-                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Prompt</th>
-                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Completion</th>
-                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Total</th>
-                            <th className="text-right text-slate-500 font-medium py-2">Cost</th>
+                            <th className="text-left text-slate-500 font-medium py-2 pr-3">Path</th>
+                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Input</th>
+                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Output</th>
+                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Cache R/W</th>
+                            <th className="text-right text-slate-500 font-medium py-2 pr-3">Cost</th>
+                            <th className="text-center text-slate-500 font-medium py-2">Status</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -114,17 +119,30 @@ function UsagePanel({ ezaiUserId }: { ezaiUserId: string }) {
                                         {log.model}
                                     </span>
                                 </td>
-                                <td className="py-2 pr-3 text-right text-slate-300 font-mono">
-                                    {formatTokens(log.prompt_tokens)}
+                                <td className="py-2 pr-3 text-slate-500 font-mono text-[11px]">
+                                    {log.request_path}
                                 </td>
                                 <td className="py-2 pr-3 text-right text-slate-300 font-mono">
-                                    {formatTokens(log.completion_tokens)}
+                                    {formatTokens(log.input_tokens)}
                                 </td>
-                                <td className="py-2 pr-3 text-right text-white font-mono font-medium">
-                                    {formatTokens(log.total_tokens)}
+                                <td className="py-2 pr-3 text-right text-slate-300 font-mono">
+                                    {formatTokens(log.output_tokens)}
                                 </td>
-                                <td className="py-2 text-right text-green-400 font-mono font-medium">
+                                <td className="py-2 pr-3 text-right text-slate-500 font-mono">
+                                    {log.cache_read_tokens > 0 || log.cache_write_tokens > 0
+                                        ? `${formatTokens(log.cache_read_tokens)}/${formatTokens(log.cache_write_tokens)}`
+                                        : '—'}
+                                </td>
+                                <td className="py-2 pr-3 text-right text-green-400 font-mono font-medium">
                                     ${log.cost.toFixed(6)}
+                                </td>
+                                <td className="py-2 text-center">
+                                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[11px] font-medium ${log.status_code === 200
+                                            ? 'bg-green-500/15 text-green-300'
+                                            : 'bg-red-500/15 text-red-300'
+                                        }`}>
+                                        {log.status_code}
+                                    </span>
                                 </td>
                             </tr>
                         ))}

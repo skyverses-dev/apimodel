@@ -123,11 +123,16 @@ export interface EzaiStats {
 
 export interface EzaiUsageLog {
   id: string
-  user_id: string
+  api_key_id: string
+  user_id: string | null
+  account_id: string
   model: string
-  prompt_tokens: number
-  completion_tokens: number
-  total_tokens: number
+  input_tokens: number
+  output_tokens: number
+  cache_write_tokens: number
+  cache_read_tokens: number
   cost: number
+  request_path: string
+  status_code: number
   created_at: string
 }
