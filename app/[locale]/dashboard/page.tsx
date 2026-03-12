@@ -3,6 +3,7 @@
 import useSWR from 'swr'
 import { UsageData } from '@/types'
 import { UsageStats } from '@/components/dashboard/UsageStats'
+import { UsageHistory } from '@/components/dashboard/UsageHistory'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, AlertTriangle } from 'lucide-react'
@@ -69,6 +70,9 @@ export default function DashboardPage() {
 
       {/* Content */}
       {data && !isLoading && <UsageStats data={data} compact={false} hideTransactions />}
+
+      {/* Usage History */}
+      {data && !isLoading && <div className="mt-6"><UsageHistory /></div>}
 
       {/* Footer */}
       <p className="text-xs text-slate-600 mt-8 text-center">
