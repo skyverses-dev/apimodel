@@ -34,7 +34,6 @@ export default function Sidebar({ user, email }: SidebarProps) {
 
   const userNav = [
     { href: `/${locale}/dashboard`, icon: LayoutDashboard, label: t('nav.dashboard') },
-    { href: `/${locale}/dashboard/usage-history`, icon: Activity, label: 'Usage History' },
     { href: `/${locale}/dashboard/topup`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/dashboard/transactions`, icon: History, label: t('nav.transactions') },
     { href: `/${locale}/dashboard/api-keys`, icon: Key, label: t('nav.apiKeys') },
@@ -44,6 +43,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
   const adminNav = [
     { href: `/${locale}/admin`, icon: ShieldCheck, label: t('nav.admin') },
     { href: `/${locale}/admin/users`, icon: Users, label: t('nav.users') },
+    { href: `/${locale}/admin/ezai-users`, icon: Activity, label: '2BRAIN Users' },
     { href: `/${locale}/admin/topups`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/admin/transactions`, icon: History, label: t('nav.transactions') },
     { href: `/${locale}/admin/webhooks`, icon: Globe, label: 'Webhooks' },
