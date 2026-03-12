@@ -49,7 +49,21 @@ export function UsageHistory() {
     const usage = data.usage || []
 
     if (usage.length === 0) {
-        return null
+        return (
+            <Card className="bg-[#0d1117] border-white/10">
+                <CardHeader>
+                    <CardTitle className="text-white text-base flex items-center gap-2">
+                        <Clock size={16} className="text-purple-400" />
+                        Usage History
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-center text-slate-500 py-8 text-sm">
+                        Chưa có request nào. Sử dụng API để thấy usage logs tại đây.
+                    </p>
+                </CardContent>
+            </Card>
+        )
     }
 
     const totalCost = usage.reduce((s, u) => s + (u.cost || 0), 0)
@@ -118,8 +132,8 @@ export function UsageHistory() {
                                     </td>
                                     <td className="py-2.5 text-center">
                                         <span className={`inline-flex px-1.5 py-0.5 rounded text-[11px] font-medium ${log.status_code === 200
-                                                ? 'bg-green-500/15 text-green-300'
-                                                : 'bg-red-500/15 text-red-300'
+                                            ? 'bg-green-500/15 text-green-300'
+                                            : 'bg-red-500/15 text-red-300'
                                             }`}>
                                             {log.status_code}
                                         </span>
