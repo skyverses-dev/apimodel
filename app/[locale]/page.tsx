@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -12,6 +13,14 @@ export default function LandingPage() {
   const locale = useLocale()
   const router = useRouter()
   const [navigating, setNavigating] = useState<string | null>(null)
+
+  const { data: pricingData } = useSWR<{
+    plans: Array<{
+      _id: string; name: string; subtitle: string; price_label: string;
+      description: string; description_sub: string; is_featured: boolean;
+    }>
+  }>('/api/pricing', (url: string) => fetch(url).then(r => r.json()))
+  const plans = pricingData?.plans || []
 
   function handleNavigate(href: string, label: string) {
     setNavigating(label)
@@ -117,24 +126,30 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="max-w-6xl mx-auto px-6 py-16 text-center">
-        <h2 className="text-3xl font-bold mb-4">Bảng giá</h2>
-        <p className="text-slate-400 mb-10">Tỷ giá: 1 USD = 26,000 VND</p>
-        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 transition-all duration-300 hover:scale-[1.02] hover:bg-white/[0.07]">
-            <h3 className="text-xl font-bold mb-2">Pay-as-you-go</h3>
-            <div className="text-4xl font-bold text-purple-400 my-4">x30</div>
-            <p className="text-slate-400">100,000 VND → $3.84 USD credit</p>
-            <p className="text-slate-400 text-sm mt-2">Không hết hạn, dùng khi cần</p>
+      {plans.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 py-16 text-center">
+          <h2 className="text-3xl font-bold mb-4">Bảng giá</h2>
+          <p className="text-slate-400 mb-10">Tỷ giá: 1 USD = 26,000 VND</p>
+          <div className={`grid gap-8 max-w-3xl mx-auto ${plans.length === 1 ? 'grid-cols-1 max-w-md' : plans.length === 2 ? 'md:grid-cols-2 max-w-2xl' : 'md:grid-cols-3'}`}>
+            {plans.map(plan => (
+              <div
+                key={plan._id}
+                className={`rounded-2xl p-8 transition-all duration-300 hover:scale-[1.02] ${plan.is_featured
+                    ? 'bg-purple-600/20 border border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/20'
+                    : 'bg-white/5 border border-white/10 hover:bg-white/[0.07]'
+                  }`}
+              >
+                <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                <div className={`text-4xl font-bold my-4 ${plan.is_featured ? 'text-pink-400' : 'text-purple-400'}`}>
+                  {plan.price_label}
+                </div>
+                {plan.description && <p className="text-slate-400">{plan.description}</p>}
+                {plan.description_sub && <p className="text-slate-400 text-sm mt-2">{plan.description_sub}</p>}
+              </div>
+            ))}
           </div>
-          <div className="bg-purple-600/20 border border-purple-500/50 rounded-2xl p-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20">
-            <h3 className="text-xl font-bold mb-2">Monthly Plan</h3>
-            <div className="text-4xl font-bold text-pink-400 my-4">Starter+</div>
-            <p className="text-slate-400">Từ $2/tháng — Daily limit cao hơn</p>
-            <p className="text-slate-400 text-sm mt-2">Phù hợp dùng thường xuyên</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 text-center text-slate-500">

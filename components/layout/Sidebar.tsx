@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { RbUser } from '@/types'
 import {
-  LayoutDashboard, Wallet, History, Key, BookOpen, Activity,
+  LayoutDashboard, Wallet, History, Key, BookOpen, Activity, Tag,
   Users, Settings, LogOut, ChevronRight, Globe, ShieldCheck
 } from 'lucide-react'
 
@@ -44,6 +44,7 @@ export default function Sidebar({ user, email }: SidebarProps) {
     { href: `/${locale}/admin`, icon: ShieldCheck, label: t('nav.admin') },
     { href: `/${locale}/admin/users`, icon: Users, label: t('nav.users') },
     { href: `/${locale}/admin/ezai-users`, icon: Activity, label: 'Người dùng Ezapi' },
+    { href: `/${locale}/admin/pricing`, icon: Tag, label: 'Bảng giá' },
     { href: `/${locale}/admin/topups`, icon: Wallet, label: t('nav.topup') },
     { href: `/${locale}/admin/transactions`, icon: History, label: t('nav.transactions') },
     { href: `/${locale}/admin/webhooks`, icon: Globe, label: 'Webhooks' },

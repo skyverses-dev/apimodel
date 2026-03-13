@@ -12,3 +12,6 @@ export type { IAuditLog } from './AuditLog'
 
 export { WebhookLog } from './WebhookLog'
 export type { IWebhookLog } from './WebhookLog'
+
+export { PricingPlan } from './PricingPlan'
+export type { IPricingPlan } from './PricingPlan'
