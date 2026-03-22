@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { UsageData, EzaiTransaction } from '@/types'
+import { useEffect, useState, useMemo } from 'react'
+import { UsageData, EzaiTransaction, EzaiUsageLog } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Wallet, Zap, TrendingUp, Calendar, Timer, Activity, BarChart3, Gauge } from 'lucide-react'
@@ -161,13 +161,56 @@ interface UsageStatsProps {
   data: UsageData
   compact?: boolean
   hideTransactions?: boolean
+  usageLogs?: EzaiUsageLog[]
 }
 
-export function UsageStats({ data, compact = false, hideTransactions = false }: UsageStatsProps) {
+export function UsageStats({ data, compact = false, hideTransactions = false, usageLogs }: UsageStatsProps) {
   const {
     balance, plan_type, daily_limit, daily_used, plan_expires_at,
-    transactions, spending_today, requests_today, spending_30d,
+    transactions,
+    spending_today: serverSpendingToday,
+    requests_today: serverRequestsToday,
+    spending_30d: serverSpending30d,
   } = data
+
+  // Recalculate from usage logs using client local timezone
+  const { spending_today, requests_today, spending_30d } = useMemo(() => {
+    if (!usageLogs || usageLogs.length === 0) {
+      return {
+        spending_today: serverSpendingToday,
+        requests_today: serverRequestsToday,
+        spending_30d: serverSpending30d,
+      }
+    }
+
+    const now = new Date()
+    // Start of today in client local timezone
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    // 30 days ago
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+    let spendToday = 0
+    let reqToday = 0
+    let spend30d = 0
+
+    for (const log of usageLogs) {
+      // EzAI returns created_at like "2026-03-22 20:55:37" (no timezone info)
+      // Treat as UTC and convert to local for comparison
+      const rawDate = log.created_at.replace(' ', 'T') + 'Z'
+      const logDate = new Date(rawDate)
+      const cost = log.cost || 0
+
+      if (logDate >= todayStart) {
+        spendToday += cost
+        reqToday += 1
+      }
+      if (logDate >= thirtyDaysAgo) {
+        spend30d += cost
+      }
+    }
+
+    return { spending_today: spendToday, requests_today: reqToday, spending_30d: spend30d }
+  }, [usageLogs, serverSpendingToday, serverRequestsToday, serverSpending30d])
 
   const pct = daily_limit > 0 ? Math.min(100, Math.round((daily_used / daily_limit) * 100)) : 0
   const remaining = Math.max(0, daily_limit - daily_used)

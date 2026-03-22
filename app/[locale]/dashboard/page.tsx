@@ -1,7 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
-import { UsageData } from '@/types'
+import { UsageData, EzaiUsageLog } from '@/types'
 import { UsageStats } from '@/components/dashboard/UsageStats'
 import { UsageHistory } from '@/components/dashboard/UsageHistory'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -16,6 +16,13 @@ export default function DashboardPage() {
     '/api/usage',
     fetcher,
     { refreshInterval: 30_000, revalidateOnFocus: true }
+  )
+
+  // Fetch all usage logs for client-side timezone-aware calculation
+  const { data: historyData } = useSWR<{ usage: EzaiUsageLog[]; total: number }>(
+    '/api/usage/history?page=1&limit=500',
+    fetcher,
+    { refreshInterval: 60_000 }
   )
 
   return (
@@ -69,7 +76,14 @@ export default function DashboardPage() {
       )}
 
       {/* Content */}
-      {data && !isLoading && <UsageStats data={data} compact={false} hideTransactions />}
+      {data && !isLoading && (
+        <UsageStats
+          data={data}
+          compact={false}
+          hideTransactions
+          usageLogs={historyData?.usage}
+        />
+      )}
 
       {/* Usage History */}
       {data && !isLoading && <div className="mt-6"><UsageHistory /></div>}
@@ -81,3 +95,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+
