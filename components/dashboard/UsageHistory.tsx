@@ -1,10 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import useSWR from 'swr'
 import { EzaiUsageLog } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Clock, Loader2 } from 'lucide-react'
+import { Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -31,14 +32,26 @@ function formatTokens(n: number): string {
     return String(n)
 }
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
+
+interface UsageHistoryResponse {
+    usage: EzaiUsageLog[]
+    total: number
+    page: number
+    limit: number
+}
+
 export function UsageHistory() {
-    const { data, isLoading, error } = useSWR<{ usage: EzaiUsageLog[] }>(
-        '/api/usage/history',
+    const [page, setPage] = useState(1)
+    const [limit, setLimit] = useState(20)
+
+    const { data, isLoading, error } = useSWR<UsageHistoryResponse>(
+        `/api/usage/history?page=${page}&limit=${limit}`,
         fetcher,
-        { refreshInterval: 60_000 }
+        { refreshInterval: 60_000, keepPreviousData: true }
     )
 
-    if (isLoading) {
+    if (isLoading && !data) {
         return <Skeleton className="h-64 rounded-xl bg-white/5" />
     }
 
@@ -47,8 +60,10 @@ export function UsageHistory() {
     }
 
     const usage = data.usage || []
+    const total = data.total || 0
+    const totalPages = Math.max(1, Math.ceil(total / limit))
 
-    if (usage.length === 0) {
+    if (total === 0) {
         return (
             <Card className="bg-[#0d1117] border-white/10">
                 <CardHeader>
@@ -76,6 +91,9 @@ export function UsageHistory() {
                 <CardTitle className="text-white text-base flex items-center gap-2">
                     <Clock size={16} className="text-purple-400" />
                     Usage History
+                    <span className="text-xs text-slate-500 font-normal ml-1">
+                        ({total} total)
+                    </span>
                 </CardTitle>
                 <div className="flex items-center gap-4 text-xs text-slate-500">
                     <span>{usage.length} requests</span>
@@ -142,6 +160,66 @@ export function UsageHistory() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                    {/* Page size selector */}
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <span>Hiển thị</span>
+                        <select
+                            value={limit}
+                            onChange={e => { setLimit(Number(e.target.value)); setPage(1) }}
+                            className="bg-white/5 border border-white/10 rounded px-2 py-1 text-slate-300 text-xs outline-none focus:border-purple-500/50 cursor-pointer"
+                        >
+                            {PAGE_SIZE_OPTIONS.map(size => (
+                                <option key={size} value={size} className="bg-[#0d1117]">
+                                    {size}
+                                </option>
+                            ))}
+                        </select>
+                        <span>/ trang</span>
+                    </div>
+
+                    {/* Page info & navigation */}
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-500 mr-2">
+                            Trang {page} / {totalPages}
+                        </span>
+
+                        <button
+                            onClick={() => setPage(1)}
+                            disabled={page <= 1}
+                            className="p-1.5 rounded hover:bg-white/10 text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="Trang đầu"
+                        >
+                            <ChevronsLeft size={14} />
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page <= 1}
+                            className="p-1.5 rounded hover:bg-white/10 text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="Trang trước"
+                        >
+                            <ChevronLeft size={14} />
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page >= totalPages}
+                            className="p-1.5 rounded hover:bg-white/10 text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="Trang sau"
+                        >
+                            <ChevronRight size={14} />
+                        </button>
+                        <button
+                            onClick={() => setPage(totalPages)}
+                            disabled={page >= totalPages}
+                            className="p-1.5 rounded hover:bg-white/10 text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="Trang cuối"
+                        >
+                            <ChevronsRight size={14} />
+                        </button>
+                    </div>
                 </div>
             </CardContent>
         </Card>

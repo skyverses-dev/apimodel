@@ -28,7 +28,6 @@ export default async function ApiKeysPage() {
   if (profile?.ezai_user_id) {
     try {
       const ezaiUser = await ezai.getUser(profile.ezai_user_id)
-      console.log('v>>>>', ezaiUser)
       const activeKey = ezaiUser.api_keys?.find(k => k.is_active === 1)
       if (activeKey?.full_key) {
         apiKey = activeKey.full_key
