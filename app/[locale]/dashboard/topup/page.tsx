@@ -40,7 +40,7 @@ interface TopupRequest {
   plan_name?: string
 }
 
-const PRESETS = [100000, 200000, 500000, 1000000]
+const PRESETS = [25000, 100000, 200000, 500000]
 
 const PLAN_STYLES = [
   { key: 'starter', label: 'Starter', emoji: '🌱', gradient: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
@@ -353,6 +353,43 @@ export default function TopupPage() {
       {/* ---- Credit Tab ---- */}
       {tab === 'credit' && (
         <div className="space-y-6">
+          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20 rounded-xl p-5 mb-6">
+            <h3 className="text-purple-300 font-bold mb-2 flex items-center gap-2">
+              <Sparkles size={16} /> Dùng AI Đỉnh Cao Bằng Chi Phí "Hạt Dẻ"
+            </h3>
+            <p className="text-slate-300 text-sm mb-4 leading-relaxed">
+              Bạn đang lãng phí nếu vẫn trả phí API chính chủ hay OpenRouter. Tại 2BRAIN, <strong>cứ nạp là x{settings?.user_leverage || 15} tài khoản</strong>. Chỉ với $1 (~25.000 VNĐ) nạp vào là có ngay ${settings?.user_leverage || 15} USD để dùng.
+            </p>
+            <div className="bg-[#0f1117] rounded-lg overflow-hidden border border-white/5">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-white/5 text-slate-400">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Model (1M Input)</th>
+                    <th className="px-4 py-2 font-medium">Thị trường</th>
+                    <th className="px-4 py-2 font-medium text-emerald-400">2BRAIN (Đã x15)</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300 divide-y divide-white/5">
+                  <tr>
+                    <td className="px-4 py-3">Claude 4.5 Sonnet</td>
+                    <td className="px-4 py-3 text-slate-500">$3.00</td>
+                    <td className="px-4 py-3 text-emerald-400 font-medium">$0.20</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3">GPT-5 Flagship</td>
+                    <td className="px-4 py-3 text-slate-500">$10.00</td>
+                    <td className="px-4 py-3 text-emerald-400 font-medium">$0.66</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3">Gemini 2.5 Flash</td>
+                    <td className="px-4 py-3 text-slate-500">$0.10</td>
+                    <td className="px-4 py-3 text-emerald-400 font-medium">$0.006</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {/* Quick amounts */}
           <div>
             <p className="text-slate-300 text-sm font-medium mb-3">Chọn nhanh</p>
@@ -437,6 +474,20 @@ export default function TopupPage() {
       {/* ---- Plan Tab ---- */}
       {tab === 'plan' && (
         <div className="space-y-6">
+          <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border border-blue-500/20 rounded-xl p-5 mb-6">
+            <h3 className="text-blue-300 font-bold mb-2 flex items-center gap-2">
+              <Zap size={16} /> Vũ khí bí mật: Tự động hồi Credit mỗi 5 giờ
+            </h3>
+            <p className="text-slate-300 text-sm mb-3 leading-relaxed">
+              Bạn sẽ không tìm thấy đặc quyền này ở bất kỳ đâu khác trên thị trường. Hạn mức tự động tái tạo liên tục, cho phép bạn <strong>tích lũy credit</strong> cực kỳ thông minh cho Automation (như n8n), crawl big data hoặc Agency làm số lượng lớn.
+            </p>
+            <ul className="space-y-1.5 text-xs text-slate-400">
+              <li className="flex gap-2 items-start"><Check size={14} className="text-blue-400 shrink-0" /> <strong>Hạn mức khổng lồ:</strong> Gói Ultra nhận giá trị hơn 1 tỷ đồng credit/tháng.</li>
+              <li className="flex gap-2 items-start"><Check size={14} className="text-blue-400 shrink-0" /> <strong>Tốc độ bàn thờ:</strong> Hỗ trợ tới 120 requests/phút (RPM), cân mọi nhu cầu nặng đô.</li>
+              <li className="flex gap-2 items-start"><Check size={14} className="text-blue-400 shrink-0" /> <strong>Mượt mà:</strong> Tương thích hoàn hảo với Cursor, Claude Code, Cline... Không lo bị lỗi vặt.</li>
+            </ul>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {PLAN_STYLES.map(plan => {
               const price = planPrice(plan.key)

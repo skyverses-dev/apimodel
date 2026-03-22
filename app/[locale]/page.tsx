@@ -141,7 +141,7 @@ export default function LandingPage() {
             {
               icon: <Coins size={24} className="text-green-400" />,
               title: 'Giá tốt nhất',
-              desc: '1 USD nạp vào = 30 USD credit. Tiết kiệm gấp đôi',
+              desc: '1 USD nạp vào = 15 USD credit. Tiết kiệm gấp 15 lần',
               delay: '0.2s',
             },
           ].map((f) => (
@@ -164,7 +164,7 @@ export default function LandingPage() {
       {plans.length > 0 && (
         <section className="relative z-10 max-w-5xl mx-auto px-6 py-20 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Bảng giá</h2>
-          <p className="text-white/40 mb-12 text-lg">Tỷ giá: 1 USD = 26,000 VND</p>
+          <p className="text-white/40 mb-12 text-lg">Tỷ giá: 1 USD = 25,000 VND</p>
 
           <div className={`grid gap-6 max-w-3xl mx-auto ${plans.length === 1 ? 'grid-cols-1 max-w-md' : plans.length === 2 ? 'md:grid-cols-2 max-w-2xl' : 'md:grid-cols-3'}`}>
             {plans.map(plan => (

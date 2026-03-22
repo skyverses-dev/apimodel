@@ -98,6 +98,8 @@ export const ezai = {
   async getUsage(userId?: string, limit = 50): Promise<{ usage: EzaiUsageLog[] }> {
     const params = new URLSearchParams({ limit: String(limit) })
     if (userId) params.set('user_id', userId)
-    return ezaiFetch(`/reseller/api/usage?${params}`)
+    const res = await ezaiFetch(`/reseller/api/usage?${params}`)
+    console.log('[EzAI] getUsage full response:', JSON.stringify(res, null, 2))
+    return res
   },
 }

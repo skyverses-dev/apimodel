@@ -75,8 +75,8 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
     }
   }
 
-  const previewUsd = 100000 / Number(values.exchange_rate || 26000)
-  const previewCredit = previewUsd * Number(values.user_leverage || 30)
+  const previewUsd = 100000 / Number(values.exchange_rate || 25000)
+  const previewCredit = previewUsd * Number(values.user_leverage || 15)
 
   return (
     <div className="space-y-6">
@@ -99,7 +99,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
               value={values.exchange_rate}
               onChange={e => update('exchange_rate', e.target.value)}
               className="bg-white/5 border-white/10 text-white"
-              placeholder="26000"
+              placeholder="25000"
             />
             <p className="text-xs text-slate-500">Hiện tại: 1 USD = {Number(values.exchange_rate).toLocaleString('vi-VN')} VND</p>
           </div>
@@ -110,7 +110,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
               value={values.user_leverage}
               onChange={e => update('user_leverage', e.target.value)}
               className="bg-white/5 border-white/10 text-white"
-              placeholder="30"
+              placeholder="15"
             />
             <p className="text-xs text-slate-500">User nạp 1 USD → nhận {values.user_leverage} USD credit</p>
           </div>
@@ -121,7 +121,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
               value={values.min_topup_vnd}
               onChange={e => update('min_topup_vnd', e.target.value)}
               className="bg-white/5 border-white/10 text-white"
-              placeholder="50000"
+              placeholder="25000"
             />
             <p className="text-xs text-slate-500">Số tiền tối thiểu khi nạp credit</p>
           </div>
@@ -228,11 +228,11 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           {[
-            { key: 'starter', label: '🌱 Starter', vndKey: 'plan_starter_vnd', limitKey: 'plan_starter_limit', placeholder: '299000' },
-            { key: 'pro', label: '⚡ Pro', vndKey: 'plan_pro_vnd', limitKey: 'plan_pro_limit', placeholder: '599000' },
-            { key: 'max', label: '🚀 Max', vndKey: 'plan_max_vnd', limitKey: 'plan_max_limit', placeholder: '999000' },
-            { key: 'ultra', label: '👑 Ultra', vndKey: 'plan_ultra_vnd', limitKey: 'plan_ultra_limit', placeholder: '1990000' },
-          ].map(({ key, label, vndKey, limitKey, placeholder }) => (
+            { key: 'starter', label: '🌱 Starter', vndKey: 'plan_starter_vnd', limitKey: 'plan_starter_limit', placeholder: '950000', limitPlaceholder: '$35/5h • 30 RPM • 5 luồng' },
+            { key: 'pro', label: '⚡ Pro', vndKey: 'plan_pro_vnd', limitKey: 'plan_pro_limit', placeholder: '1900000', limitPlaceholder: '$80/5h • 60 RPM • 10 luồng' },
+            { key: 'max', label: '🚀 Max', vndKey: 'plan_max_vnd', limitKey: 'plan_max_limit', placeholder: '3000000', limitPlaceholder: '$180/5h • 90 RPM • 15 luồng' },
+            { key: 'ultra', label: '👑 Ultra', vndKey: 'plan_ultra_vnd', limitKey: 'plan_ultra_limit', placeholder: '4500000', limitPlaceholder: '$400/5h • 120 RPM • 20 luồng' },
+          ].map(({ key, label, vndKey, limitKey, placeholder, limitPlaceholder }) => (
             <div key={key} className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-800/30 rounded-xl border border-slate-700/30">
               <div className="sm:col-span-3">
                 <p className="text-white font-semibold text-sm">{label}</p>
@@ -253,7 +253,7 @@ export default function SettingsForm({ initial }: SettingsFormProps) {
                   value={(values as Record<string, string>)[limitKey]}
                   onChange={e => update(limitKey, e.target.value)}
                   className="bg-white/5 border-white/10 text-white"
-                  placeholder="35 credits/5h"
+                  placeholder={limitPlaceholder}
                 />
               </div>
             </div>
