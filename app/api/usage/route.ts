@@ -76,6 +76,7 @@ export async function GET() {
         spending_30d += cost
       }
     }
+    console.log('ezaiUser', ezaiUser)
 
     const result: UsageData = {
       balance: ezaiUser?.balance ?? 0,
