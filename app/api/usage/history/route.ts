@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
         const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
         const limit = Math.min(100, Math.max(5, parseInt(searchParams.get('limit') || '20')))
 
-        // Fetch more records from EzAI to allow client-side pagination
-        const result = await ezai.getUsage(profile.ezai_user_id, 500)
+        // Fetch all records from EzAI (auto-paginates past 100/page limit)
+        const result = await ezai.getAllUsage(profile.ezai_user_id)
         const allUsage = result.usage || []
         const total = allUsage.length
 

@@ -94,12 +94,30 @@ export const ezai = {
     return ezaiFetch('/reseller/api/stats')
   },
 
-  // Get usage logs, optionally filtered by user_id
-  async getUsage(userId?: string, limit = 50): Promise<{ usage: EzaiUsageLog[] }> {
-    const params = new URLSearchParams({ limit: String(limit) })
+  // Get usage logs, optionally filtered by user_id (single page)
+  async getUsage(userId?: string, limit = 50, page = 1): Promise<{ usage: EzaiUsageLog[] }> {
+    const params = new URLSearchParams({ limit: String(limit), page: String(page) })
     if (userId) params.set('user_id', userId)
     const res = await ezaiFetch(`/reseller/api/usage?${params}`)
-    // console.log('[EzAI] getUsage full response:', JSON.stringify(res, null, 2))
     return res
   },
+
+  // Fetch ALL usage logs by auto-paginating (EzAI caps ~100/page)
+  async getAllUsage(userId?: string, maxRecords = 1000): Promise<{ usage: EzaiUsageLog[] }> {
+    const perPage = 100
+    const maxPages = Math.ceil(maxRecords / perPage)
+    let allUsage: EzaiUsageLog[] = []
+
+    for (let page = 1; page <= maxPages; page++) {
+      const res = await this.getUsage(userId, perPage, page)
+      const batch = res.usage || []
+      allUsage = allUsage.concat(batch)
+
+      // If we got fewer than perPage, we've reached the last page
+      if (batch.length < perPage) break
+    }
+
+    return { usage: allUsage }
+  },
 }
+

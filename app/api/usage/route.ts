@@ -46,7 +46,7 @@ export async function GET() {
         status: 'approved',
         approved_at: { $gte: monthStart },
       }).select('vnd_amount credit_amount').lean(),
-      ezai.getUsage(ezaiUserId, 500),
+      ezai.getAllUsage(ezaiUserId),
     ])
 
     const ezaiUser = ezaiUserResult.status === 'fulfilled' ? ezaiUserResult.value : null
