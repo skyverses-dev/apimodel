@@ -99,7 +99,7 @@ export const ezai = {
     const params = new URLSearchParams({ limit: String(limit) })
     if (userId) params.set('user_id', userId)
     const res = await ezaiFetch(`/reseller/api/usage?${params}`)
-    console.log('[EzAI] getUsage full response:', JSON.stringify(res, null, 2))
+    // console.log('[EzAI] getUsage full response:', JSON.stringify(res, null, 2))
     return res
   },
 }
