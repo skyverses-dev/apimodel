@@ -40,7 +40,7 @@ interface TopupRequest {
   plan_name?: string
 }
 
-const PRESETS = [25000, 100000, 200000, 500000]
+const PRESETS = [100000, 200000, 500000, 1000000]
 
 const PLAN_STYLES = [
   { key: 'starter', label: 'Starter', emoji: '🌱', gradient: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
