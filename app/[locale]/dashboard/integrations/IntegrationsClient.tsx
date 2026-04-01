@@ -452,6 +452,7 @@ export default function IntegrationsClient({ apiKey, aiBase }: Props) {
   const GuideComponent = guide.component
 
   return (
+    <div className="p-6 sm:p-8">
     <div className="max-w-5xl mx-auto space-y-8 pb-16">
       {/* Header */}
       <div className="space-y-4">
@@ -512,6 +513,7 @@ export default function IntegrationsClient({ apiKey, aiBase }: Props) {
 
       {/* Guide content */}
       <GuideComponent apiKey={apiKey} aiBase={aiBase} />
+    </div>
     </div>
   )
 }
