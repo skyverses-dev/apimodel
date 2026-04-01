@@ -3,6 +3,7 @@ import { TopupRequest, User } from '@/lib/db/models'
 import { getSession } from '@/lib/auth'
 import { Card, CardContent } from '@/components/ui/card'
 import TopupsTable from './TopupsTable'
+import RevenueChart from './RevenueChart'
 
 export default async function AdminTopupsPage() {
   const session = await getSession()
@@ -32,6 +33,15 @@ export default async function AdminTopupsPage() {
     created_at: t.created_at.toISOString(),
   }))
 
+  // Chart data — all topups with basic info for the chart
+  const chartTopups = topups.map(t => ({
+    vnd_amount: t.vnd_amount,
+    credit_amount: t.credit_amount,
+    admin_note: t.admin_note || undefined,
+    created_at: t.created_at.toISOString(),
+    status: t.status,
+  }))
+
   const pendingCount = topups.filter(t => t.status === 'pending').length
 
   return (
@@ -44,7 +54,10 @@ export default async function AdminTopupsPage() {
           </span>
         )}
       </div>
-      <p className="text-slate-400 mb-8">Xem xét và xác nhận các yêu cầu chuyển khoản</p>
+      <p className="text-slate-400 mb-6">Xem xét và xác nhận các yêu cầu chuyển khoản</p>
+
+      {/* Revenue Chart */}
+      <RevenueChart topups={chartTopups} />
 
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0 pt-4 px-4">
