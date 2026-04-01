@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/db/mongodb'
-import { User, TopupRequest, AuditLog, WebhookLog } from '@/lib/db/models'
+import { User, TopupRequest, AuditLog, WebhookLog, Settings } from '@/lib/db/models'
 import { ezai } from '@/lib/ezai/client'
 
 /**
@@ -148,10 +148,13 @@ async function processTransaction(
                 }
             }
 
-            // Save EzAI credentials to MongoDB
+            // Save EzAI credentials + default leverage to MongoDB
+            const settings = await Settings.findOne().lean()
+            const defaultLeverage = settings?.user_leverage || 30
             await User.findByIdAndUpdate(topup.user_id, {
                 ezai_user_id: newEzaiUserId,
                 ezai_api_key: newEzaiApiKey,
+                ...(!userProfile.leverage ? { leverage: defaultLeverage } : {}),
             })
 
             ezaiUserId = newEzaiUserId
