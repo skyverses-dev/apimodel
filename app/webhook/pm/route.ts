@@ -107,16 +107,75 @@ async function processTransaction(
     }
 
     // Get user
-    const userProfile = await User.findById(topup.user_id).select('ezai_user_id email').lean()
+    const userProfile = await User.findById(topup.user_id).select('ezai_user_id ezai_api_key email name').lean()
+
+    // Auto-provision EzAI account if user doesn't have one yet
+    let ezaiUserId = userProfile?.ezai_user_id
+    let autoProvisioned = false
+
+    if (userProfile && !ezaiUserId) {
+        try {
+            let newEzaiUserId: string
+            let newEzaiApiKey: string
+
+            try {
+                // Try to create new EzAI user
+                const ezaiUser = await ezai.createUser(userProfile.email, userProfile.name || userProfile.email)
+                newEzaiUserId = ezaiUser.id
+                newEzaiApiKey = ezaiUser.api_key
+            } catch (createErr: unknown) {
+                const errMsg = createErr instanceof Error ? createErr.message : ''
+
+                // If email already exists on EzAI, find and link the existing account
+                if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exist') || errMsg.toLowerCase().includes('duplicate')) {
+                    console.log(`[Webhook] EzAI user ${userProfile.email} already exists, looking up...`)
+                    const { users } = await ezai.listUsers(1, 200)
+                    const existing = users.find(u => u.email === userProfile.email)
+
+                    if (!existing) throw new Error('EzAI user exists but could not be found via search')
+
+                    newEzaiUserId = existing.id
+                    const fullUser = await ezai.getUser(newEzaiUserId)
+                    const activeKey = fullUser.api_keys?.find(k => k.is_active === 1)
+                    newEzaiApiKey = activeKey?.full_key || fullUser.api_keys?.[0]?.full_key || ''
+
+                    if (!newEzaiApiKey) {
+                        const newKey = await ezai.createApiKey(newEzaiUserId)
+                        newEzaiApiKey = newKey.full_key || ''
+                    }
+                } else {
+                    throw createErr
+                }
+            }
+
+            // Save EzAI credentials to MongoDB
+            await User.findByIdAndUpdate(topup.user_id, {
+                ezai_user_id: newEzaiUserId,
+                ezai_api_key: newEzaiApiKey,
+            })
+
+            ezaiUserId = newEzaiUserId
+            autoProvisioned = true
+            console.log(`[Webhook] ✅ Auto-provisioned EzAI account for ${userProfile.email} (${newEzaiUserId})`)
+
+            await AuditLog.create({
+                user_id: topup.user_id,
+                action: 'user_provisioned',
+                details: { target_user_id: topup.user_id.toString(), ezai_user_id: newEzaiUserId, source: 'webhook_auto' },
+            })
+        } catch (provisionErr) {
+            console.log(`[Webhook] Auto-provision failed for ${userProfile.email}:`, provisionErr instanceof Error ? provisionErr.message : provisionErr)
+        }
+    }
 
     // Try EzAI credit (non-blocking — admin can do manually later)
     let ezaiCredited = false
-    if (userProfile?.ezai_user_id) {
+    if (ezaiUserId) {
         try {
             if (topup.type === 'plan' && topup.plan_name) {
-                await ezai.activatePlan(userProfile.ezai_user_id, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
+                await ezai.activatePlan(ezaiUserId, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
             } else {
-                await ezai.topupUser(userProfile.ezai_user_id, topup.usd_amount)
+                await ezai.topupUser(ezaiUserId, topup.usd_amount)
             }
             ezaiCredited = true
         } catch (ezaiErr) {
@@ -126,10 +185,11 @@ async function processTransaction(
 
     // Approve topup
     const txId = tx.id || tx.transactionNumber || tx.transferId || ''
+    const provisionNote = autoProvisioned ? ' [Auto-provisioned EzAI]' : ''
     const ezaiNote = ezaiCredited ? '' : ' [EzAI pending - admin cần credit thủ công]'
     await TopupRequest.findByIdAndUpdate(topup._id, {
         status: 'approved',
-        admin_note: `Auto-approved via webhook${txId ? ` (ref: ${txId})` : ''}${ezaiNote}`,
+        admin_note: `Auto-approved via webhook${txId ? ` (ref: ${txId})` : ''}${provisionNote}${ezaiNote}`,
         approved_at: new Date(),
     })
 
@@ -147,6 +207,7 @@ async function processTransaction(
             type: topup.type,
             plan_name: topup.plan_name,
             ezai_credited: ezaiCredited,
+            auto_provisioned: autoProvisioned,
         },
     })
 
@@ -155,11 +216,11 @@ async function processTransaction(
         source: 'payment', method: 'POST', headers: rawHeaders, body: fullBody,
         matched_topup_id: topup._id, matched_user_email: userEmail,
         result: 'success',
-        result_message: `Approved ${topup.type === 'plan' ? `plan ${topup.plan_name}` : `$${topup.usd_amount}`} for ${userEmail}${ezaiCredited ? '' : ' (EzAI pending)'}`,
+        result_message: `Approved ${topup.type === 'plan' ? `plan ${topup.plan_name}` : `$${topup.usd_amount}`} for ${userEmail}${autoProvisioned ? ' (auto-provisioned)' : ''}${ezaiCredited ? '' : ' (EzAI pending)'}`,
         ip,
     })
 
-    console.log(`[Webhook] #${log._id} ✅ Auto-approved topup ${topup._id} for ${userEmail}`)
+    console.log(`[Webhook] #${log._id} ✅ Auto-approved topup ${topup._id} for ${userEmail}${autoProvisioned ? ' (new account)' : ''}`)
 
     return {
         success: true,
@@ -168,5 +229,6 @@ async function processTransaction(
         user_email: userEmail,
         vnd_amount: topup.vnd_amount,
         ezai_credited: ezaiCredited,
+        auto_provisioned: autoProvisioned,
     }
 }
