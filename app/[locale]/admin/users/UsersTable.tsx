@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, UserPlus, Zap } from 'lucide-react'
+import { Loader2, Zap, DollarSign, X } from 'lucide-react'
 
 interface UserRow {
   id: string
@@ -21,6 +21,9 @@ interface UserRow {
 export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }) {
   const [users, setUsers] = useState(initialUsers)
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [topupUserId, setTopupUserId] = useState<string | null>(null)
+  const [topupAmount, setTopupAmount] = useState('')
+  const [topupLoading, setTopupLoading] = useState(false)
 
   async function provisionUser(userId: string) {
     setLoadingId(userId)
@@ -39,6 +42,33 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
       toast.error(err instanceof Error ? err.message : 'Lỗi tạo tài khoản')
     } finally {
       setLoadingId(null)
+    }
+  }
+
+  async function manualTopup(userId: string) {
+    const amount = parseFloat(topupAmount)
+    if (!amount || amount <= 0) {
+      toast.error('Số tiền phải lớn hơn 0')
+      return
+    }
+
+    setTopupLoading(true)
+    try {
+      const res = await fetch('/api/admin/users/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, usd_amount: amount }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      toast.success(data.message || `Đã nạp $${amount} thành công!`)
+      setTopupUserId(null)
+      setTopupAmount('')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi nạp credit')
+    } finally {
+      setTopupLoading(false)
     }
   }
 
@@ -101,21 +131,76 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
                   {new Date(user.created_at).toLocaleDateString('vi-VN')}
                 </td>
                 <td className="px-4 py-4">
-                  {!user.ezai_user_id && user.role === 'user' && (
-                    <Button
-                      size="sm"
-                      onClick={() => provisionUser(user.id)}
-                      disabled={loadingId === user.id}
-                      className="bg-purple-600 hover:bg-purple-700 h-7 text-xs px-3"
-                    >
-                      {loadingId === user.id ? (
-                        <Loader2 size={12} className="mr-1 animate-spin" />
-                      ) : (
-                        <Zap size={12} className="mr-1" />
-                      )}
-                      Kích hoạt
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!user.ezai_user_id && user.role === 'user' && (
+                      <Button
+                        size="sm"
+                        onClick={() => provisionUser(user.id)}
+                        disabled={loadingId === user.id}
+                        className="bg-purple-600 hover:bg-purple-700 h-7 text-xs px-3"
+                      >
+                        {loadingId === user.id ? (
+                          <Loader2 size={12} className="mr-1 animate-spin" />
+                        ) : (
+                          <Zap size={12} className="mr-1" />
+                        )}
+                        Kích hoạt
+                      </Button>
+                    )}
+
+                    {user.ezai_user_id && (
+                      <>
+                        {topupUserId === user.id ? (
+                          <div className="flex items-center gap-1">
+                            <div className="relative">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-emerald-400 text-xs font-medium">$</span>
+                              <input
+                                type="number"
+                                value={topupAmount}
+                                onChange={(e) => setTopupAmount(e.target.value)}
+                                placeholder="0.00"
+                                step="0.5"
+                                min="0.1"
+                                className="w-20 h-7 pl-5 pr-1 text-xs rounded bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') manualTopup(user.id)
+                                  if (e.key === 'Escape') { setTopupUserId(null); setTopupAmount('') }
+                                }}
+                              />
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => manualTopup(user.id)}
+                              disabled={topupLoading}
+                              className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs px-2"
+                            >
+                              {topupLoading ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                'Nạp'
+                              )}
+                            </Button>
+                            <button
+                              onClick={() => { setTopupUserId(null); setTopupAmount('') }}
+                              className="text-slate-500 hover:text-white transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => { setTopupUserId(user.id); setTopupAmount('') }}
+                            className="bg-emerald-600/80 hover:bg-emerald-600 h-7 text-xs px-3"
+                          >
+                            <DollarSign size={12} className="mr-1" />
+                            Nạp credit
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))
