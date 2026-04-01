@@ -174,6 +174,7 @@ async function processTransaction(
     // EzAI topup endpoint internally x30 the input amount.
     // Send credit_amount / 30 so user gets the correct credit.
     let ezaiCredited = false
+    let ezaiError = ''
     if (ezaiUserId) {
         try {
             if (topup.type === 'plan' && topup.plan_name) {
@@ -184,14 +185,15 @@ async function processTransaction(
             }
             ezaiCredited = true
         } catch (ezaiErr) {
-            console.log(`[Webhook] EzAI credit failed (will approve anyway):`, ezaiErr instanceof Error ? ezaiErr.message : ezaiErr)
+            ezaiError = ezaiErr instanceof Error ? ezaiErr.message : String(ezaiErr)
+            console.log(`[Webhook] EzAI credit failed (will approve anyway):`, ezaiError)
         }
     }
 
     // Approve topup
     const txId = tx.id || tx.transactionNumber || tx.transferId || ''
     const provisionNote = autoProvisioned ? ' [Auto-provisioned EzAI]' : ''
-    const ezaiNote = ezaiCredited ? '' : ' [EzAI pending - admin cần credit thủ công]'
+    const ezaiNote = ezaiCredited ? '' : ` [EzAI FAILED: ${ezaiError || 'No EzAI account'}]`
     await TopupRequest.findByIdAndUpdate(topup._id, {
         status: 'approved',
         admin_note: `Auto-approved via webhook${txId ? ` (ref: ${txId})` : ''}${provisionNote}${ezaiNote}`,

@@ -225,15 +225,29 @@ export default function TopupsTable({ initialTopups, userMap }: TopupsTableProps
                     </code>
                   </td>
                   <td className="px-4 py-4">
-                    {topup.status === 'approved' && topup.admin_note?.includes('webhook') ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300">Auto ✓ Webhook</span>
-                    ) : topup.status === 'approved' ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300">Admin duyệt</span>
-                    ) : topup.status === 'rejected' ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300">Từ chối</span>
-                    ) : (
-                      <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300">Chờ duyệt</span>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {topup.status === 'approved' && topup.admin_note?.includes('EzAI FAILED') ? (
+                        <>
+                          <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 inline-block w-fit">⚠ EzAI Failed</span>
+                          <span className="text-[10px] text-red-400/80 max-w-[200px] truncate" title={topup.admin_note}>
+                            {topup.admin_note?.match(/\[EzAI FAILED: (.+?)\]/)?.[1] || 'Credit chưa được cộng'}
+                          </span>
+                        </>
+                      ) : topup.status === 'approved' && topup.admin_note?.includes('webhook') ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 inline-block w-fit">Auto ✓ Webhook</span>
+                      ) : topup.status === 'approved' ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 inline-block w-fit">Admin duyệt</span>
+                      ) : topup.status === 'rejected' ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 inline-block w-fit">Từ chối</span>
+                      ) : (
+                        <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 inline-block w-fit">Chờ duyệt</span>
+                      )}
+                      {topup.admin_note && !topup.admin_note.includes('EzAI FAILED') && (
+                        <span className="text-[10px] text-slate-500 max-w-[200px] truncate" title={topup.admin_note}>
+                          {topup.admin_note}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-4">
                     {topup.status === 'pending' && (
