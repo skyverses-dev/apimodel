@@ -366,7 +366,7 @@ export default function TopupPage() {
                   <tr>
                     <th className="px-4 py-2 font-medium">Model (1M Input)</th>
                     <th className="px-4 py-2 font-medium">Thị trường</th>
-                    <th className="px-4 py-2 font-medium text-emerald-400">2BRAIN (Đã x15)</th>
+                    <th className="px-4 py-2 font-medium text-emerald-400">2BRAIN (Đã x{settings?.user_leverage || 15})</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-300 divide-y divide-white/5">

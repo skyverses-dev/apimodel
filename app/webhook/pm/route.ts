@@ -171,14 +171,16 @@ async function processTransaction(
         }
     }
 
-    // Try EzAI credit — use credit_amount (USD × leverage)
+    // EzAI topup endpoint internally x30 the input amount.
+    // Send credit_amount / 30 so user gets the correct credit.
     let ezaiCredited = false
     if (ezaiUserId) {
         try {
             if (topup.type === 'plan' && topup.plan_name) {
                 await ezai.activatePlan(ezaiUserId, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
             } else {
-                await ezai.topupUser(ezaiUserId, topup.credit_amount)
+                const ezaiAmount = topup.credit_amount / 30
+                await ezai.topupUser(ezaiUserId, ezaiAmount)
             }
             ezaiCredited = true
         } catch (ezaiErr) {

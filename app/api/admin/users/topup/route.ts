@@ -43,8 +43,11 @@ export async function POST(request: Request) {
     const usdAmount = vnd_amount / exchangeRate
     const creditAmount = usdAmount * leverage
 
-    // Top up on EzAI (send credit amount = USD × leverage)
-    await ezai.topupUser(targetUser.ezai_user_id, creditAmount)
+    // EzAI topup endpoint internally x30 the input amount.
+    // Admin buys at x30, resells to user at x{leverage} → send creditAmount / 30
+    // Example: 100k VND = $4 USD * x15 = $60 credit → send $60/30 = $2 to EzAI
+    const ezaiAmount = creditAmount / 30
+    await ezai.topupUser(targetUser.ezai_user_id, ezaiAmount)
 
     // Audit log
     await AuditLog.create({
