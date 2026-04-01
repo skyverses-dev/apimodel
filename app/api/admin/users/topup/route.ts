@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     // Convert VND → USD → Credit (with leverage)
     const exchangeRate = settings?.exchange_rate || 26000
-    const leverage = targetUser.leverage || settings?.user_leverage || 30
+    const leverage = targetUser.leverage || settings?.user_leverage || 15
     const usdAmount = vnd_amount / exchangeRate
     const creditAmount = usdAmount * leverage
 

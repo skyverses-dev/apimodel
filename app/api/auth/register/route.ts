@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/db/mongodb'
-import { User } from '@/lib/db/models'
+import { User, Settings } from '@/lib/db/models'
 import { hashPassword } from '@/lib/auth/password'
 import { signToken } from '@/lib/auth/jwt'
 import { setSession } from '@/lib/auth/session'
@@ -21,13 +21,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
         }
 
-        // Create user
+        // Get default leverage from settings
+        const settings = await Settings.findOne().lean()
+        const defaultLeverage = settings?.user_leverage || 30
+
+        // Create user with default leverage
         const hashed = await hashPassword(password)
         const user = await User.create({
             email: email.toLowerCase(),
             password: hashed,
             name: name || email.split('@')[0],
             role: 'user',
+            leverage: defaultLeverage,
         })
 
         // Create JWT & set cookie
