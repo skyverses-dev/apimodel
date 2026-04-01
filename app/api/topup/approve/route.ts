@@ -32,11 +32,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User does not have an EzAI account' }, { status: 400 })
     }
 
-    // Call EzAI
+    // Call EzAI — use credit_amount (USD × leverage) for topup
     if (topup.type === 'plan' && topup.plan_name) {
       await ezai.activatePlan(userProfile.ezai_user_id, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
     } else {
-      await ezai.topupUser(userProfile.ezai_user_id, topup.usd_amount)
+      await ezai.topupUser(userProfile.ezai_user_id, topup.credit_amount)
     }
 
     // Update topup request

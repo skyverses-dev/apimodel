@@ -168,14 +168,14 @@ async function processTransaction(
         }
     }
 
-    // Try EzAI credit (non-blocking — admin can do manually later)
+    // Try EzAI credit — use credit_amount (USD × leverage)
     let ezaiCredited = false
     if (ezaiUserId) {
         try {
             if (topup.type === 'plan' && topup.plan_name) {
                 await ezai.activatePlan(ezaiUserId, topup.plan_name as 'starter' | 'pro' | 'max' | 'ultra')
             } else {
-                await ezai.topupUser(ezaiUserId, topup.usd_amount)
+                await ezai.topupUser(ezaiUserId, topup.credit_amount)
             }
             ezaiCredited = true
         } catch (ezaiErr) {

@@ -37,12 +37,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User chưa kích hoạt EzAI. Hãy kích hoạt trước.' }, { status: 400 })
     }
 
-    // Convert VND → USD
+    // Convert VND → USD → Credit (with leverage)
     const exchangeRate = settings?.exchange_rate || 26000
+    const leverage = targetUser.leverage || settings?.user_leverage || 30
     const usdAmount = vnd_amount / exchangeRate
+    const creditAmount = usdAmount * leverage
 
-    // Top up on EzAI
-    await ezai.topupUser(targetUser.ezai_user_id, usdAmount)
+    // Top up on EzAI (send credit amount = USD × leverage)
+    await ezai.topupUser(targetUser.ezai_user_id, creditAmount)
 
     // Audit log
     await AuditLog.create({
@@ -53,6 +55,8 @@ export async function POST(request: Request) {
         target_email: targetUser.email,
         vnd_amount,
         usd_amount: usdAmount,
+        credit_amount: creditAmount,
+        leverage,
         exchange_rate: exchangeRate,
         ezai_user_id: targetUser.ezai_user_id,
       },
@@ -60,9 +64,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Đã nạp ${vnd_amount.toLocaleString()}đ ($${usdAmount.toFixed(2)}) cho ${targetUser.email}`,
+      message: `Đã nạp ${vnd_amount.toLocaleString()}đ ($${creditAmount.toFixed(2)} credit, x${leverage}) cho ${targetUser.email}`,
       vnd_amount,
       usd_amount: usdAmount,
+      credit_amount: creditAmount,
+      leverage,
       exchange_rate: exchangeRate,
     })
   } catch (err: unknown) {
