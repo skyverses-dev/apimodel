@@ -18,12 +18,15 @@ interface UserRow {
   created_at: string
 }
 
-export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }) {
+export default function UsersTable({ initialUsers, exchangeRate }: { initialUsers: UserRow[]; exchangeRate: number }) {
   const [users, setUsers] = useState(initialUsers)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [topupUserId, setTopupUserId] = useState<string | null>(null)
   const [topupAmount, setTopupAmount] = useState('')
   const [topupLoading, setTopupLoading] = useState(false)
+
+  const vndValue = parseFloat(topupAmount) || 0
+  const usdPreview = vndValue > 0 ? (vndValue / exchangeRate).toFixed(2) : null
 
   async function provisionUser(userId: string) {
     setLoadingId(userId)
@@ -46,8 +49,7 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
   }
 
   async function manualTopup(userId: string) {
-    const amount = parseFloat(topupAmount)
-    if (!amount || amount <= 0) {
+    if (vndValue <= 0) {
       toast.error('Số tiền phải lớn hơn 0')
       return
     }
@@ -57,12 +59,12 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
       const res = await fetch('/api/admin/users/topup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, usd_amount: amount }),
+        body: JSON.stringify({ user_id: userId, vnd_amount: vndValue }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
-      toast.success(data.message || `Đã nạp $${amount} thành công!`)
+      toast.success(data.message || `Đã nạp ${vndValue.toLocaleString()}đ thành công!`)
       setTopupUserId(null)
       setTopupAmount('')
     } catch (err: unknown) {
@@ -151,23 +153,30 @@ export default function UsersTable({ initialUsers }: { initialUsers: UserRow[] }
                     {user.ezai_user_id && (
                       <>
                         {topupUserId === user.id ? (
-                          <div className="flex items-center gap-1">
-                            <div className="relative">
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-emerald-400 text-xs font-medium">$</span>
-                              <input
-                                type="number"
-                                value={topupAmount}
-                                onChange={(e) => setTopupAmount(e.target.value)}
-                                placeholder="0.00"
-                                step="0.5"
-                                min="0.1"
-                                className="w-20 h-7 pl-5 pr-1 text-xs rounded bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') manualTopup(user.id)
-                                  if (e.key === 'Escape') { setTopupUserId(null); setTopupAmount('') }
-                                }}
-                              />
+                          <div className="flex items-center gap-1.5">
+                            <div>
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-400 text-xs font-medium">₫</span>
+                                <input
+                                  type="number"
+                                  value={topupAmount}
+                                  onChange={(e) => setTopupAmount(e.target.value)}
+                                  placeholder="50,000"
+                                  step="10000"
+                                  min="10000"
+                                  className="w-24 h-7 pl-5 pr-1 text-xs rounded bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') manualTopup(user.id)
+                                    if (e.key === 'Escape') { setTopupUserId(null); setTopupAmount('') }
+                                  }}
+                                />
+                              </div>
+                              {usdPreview && (
+                                <p className="text-[10px] text-emerald-400 mt-0.5 pl-1">
+                                  ≈ ${usdPreview} USD
+                                </p>
+                              )}
                             </div>
                             <Button
                               size="sm"
