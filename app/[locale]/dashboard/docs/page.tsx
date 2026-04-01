@@ -137,6 +137,7 @@ export default async function DocsPage() {
   }
 
   return (
+    <div className="p-6 sm:p-8">
     <div className="max-w-5xl mx-auto space-y-12 pb-16">
 
       {/* Header */}
@@ -697,6 +698,7 @@ export default async function DocsPage() {
           <ExternalLink size={12} />
         </Link>
       </div>
+    </div>
     </div>
   )
 }
