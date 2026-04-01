@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/db/mongodb'
 import { User, TopupRequest, AuditLog, WebhookLog, Settings } from '@/lib/db/models'
 import { ezai } from '@/lib/ezai/client'
+import { notifyTopupSuccess } from '@/lib/telegram'
 
 /**
  * POST /webhook/pm — Payment webhook
@@ -228,6 +229,21 @@ async function processTransaction(
     })
 
     console.log(`[Webhook] #${log._id} ✅ Auto-approved topup ${topup._id} for ${userEmail}${autoProvisioned ? ' (new account)' : ''}`)
+
+    // Send Telegram notification (fire-and-forget, don't block response)
+    notifyTopupSuccess({
+        userEmail,
+        userName: userProfile?.name || undefined,
+        vndAmount: topup.vnd_amount,
+        usdAmount: topup.usd_amount,
+        creditAmount: topup.credit_amount,
+        transferCode,
+        type: topup.type === 'plan' ? 'plan' : 'credit',
+        planName: topup.plan_name || undefined,
+        ezaiCredited,
+        autoProvisioned,
+        topupId: topup._id.toString(),
+    }).catch(err => console.error('[Webhook] Telegram notify error:', err))
 
     return {
         success: true,
