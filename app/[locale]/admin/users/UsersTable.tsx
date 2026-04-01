@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Zap, DollarSign, X } from 'lucide-react'
+import { Loader2, Zap, DollarSign, X, Pencil } from 'lucide-react'
 
 interface UserRow {
   id: string
@@ -24,6 +24,9 @@ export default function UsersTable({ initialUsers, exchangeRate }: { initialUser
   const [topupUserId, setTopupUserId] = useState<string | null>(null)
   const [topupAmount, setTopupAmount] = useState('')
   const [topupLoading, setTopupLoading] = useState(false)
+  const [leverageEditId, setLeverageEditId] = useState<string | null>(null)
+  const [leverageValue, setLeverageValue] = useState('')
+  const [leverageLoading, setLeverageLoading] = useState(false)
 
   const vndValue = parseFloat(topupAmount) || 0
   const usdPreview = vndValue > 0 ? (vndValue / exchangeRate).toFixed(2) : null
@@ -71,6 +74,34 @@ export default function UsersTable({ initialUsers, exchangeRate }: { initialUser
       toast.error(err instanceof Error ? err.message : 'Lỗi nạp credit')
     } finally {
       setTopupLoading(false)
+    }
+  }
+
+  async function updateLeverage(userId: string) {
+    const val = parseInt(leverageValue)
+    if (!val || val < 1 || val > 200) {
+      toast.error('Đòn bẩy phải từ 1 đến 200')
+      return
+    }
+
+    setLeverageLoading(true)
+    try {
+      const res = await fetch('/api/admin/users/leverage', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, leverage: val }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, leverage: val } : u))
+      toast.success(data.message || `Đã cập nhật đòn bẩy x${val}`)
+      setLeverageEditId(null)
+      setLeverageValue('')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi cập nhật đòn bẩy')
+    } finally {
+      setLeverageLoading(false)
     }
   }
 
@@ -126,8 +157,43 @@ export default function UsersTable({ initialUsers, exchangeRate }: { initialUser
                     </Badge>
                   )}
                 </td>
-                <td className="px-4 py-4 text-sm text-slate-300">
-                  x{user.leverage || 30}
+                <td className="px-4 py-4">
+                  {leverageEditId === user.id ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 text-sm">x</span>
+                      <input
+                        type="number"
+                        value={leverageValue}
+                        onChange={(e) => setLeverageValue(e.target.value)}
+                        min="1"
+                        max="200"
+                        className="w-14 h-6 px-1.5 text-xs rounded bg-white/10 border border-white/20 text-white focus:outline-none focus:border-amber-500"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') updateLeverage(user.id)
+                          if (e.key === 'Escape') { setLeverageEditId(null); setLeverageValue('') }
+                        }}
+                      />
+                      {leverageLoading ? (
+                        <Loader2 size={12} className="text-amber-400 animate-spin" />
+                      ) : (
+                        <button
+                          onClick={() => { setLeverageEditId(null); setLeverageValue('') }}
+                          className="text-slate-500 hover:text-white transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setLeverageEditId(user.id); setLeverageValue(String(user.leverage || 30)) }}
+                      className="group flex items-center gap-1 text-sm text-slate-300 hover:text-amber-300 transition-colors"
+                    >
+                      x{user.leverage || 30}
+                      <Pencil size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  )}
                 </td>
                 <td className="px-4 py-4 text-sm text-slate-400">
                   {new Date(user.created_at).toLocaleDateString('vi-VN')}
