@@ -18,7 +18,7 @@ interface UserRow {
   created_at: string
 }
 
-export default function UsersTable({ initialUsers, exchangeRate }: { initialUsers: UserRow[]; exchangeRate: number }) {
+export default function UsersTable({ initialUsers, exchangeRate, balanceMap, totalCreditsMap }: { initialUsers: UserRow[]; exchangeRate: number; balanceMap: Record<string, number>; totalCreditsMap: Record<string, number> }) {
   const [users, setUsers] = useState(initialUsers)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [topupUserId, setTopupUserId] = useState<string | null>(null)
@@ -110,7 +110,7 @@ export default function UsersTable({ initialUsers, exchangeRate }: { initialUser
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/10">
-            {['User', 'Email', 'Mã user', '2BRAIN', 'Đòn bẩy', 'Ngày tạo', ''].map(h => (
+            {['User', 'Email', 'Mã user', '2BRAIN', 'Credit', 'Tổng nạp', 'Đòn bẩy', 'Ngày tạo', ''].map(h => (
               <th key={h} className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wider">{h}</th>
             ))}
           </tr>
@@ -118,7 +118,7 @@ export default function UsersTable({ initialUsers, exchangeRate }: { initialUser
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center py-12 text-slate-500">
+              <td colSpan={9} className="text-center py-12 text-slate-500">
                 Chưa có người dùng nào
               </td>
             </tr>
@@ -155,6 +155,20 @@ export default function UsersTable({ initialUsers, exchangeRate }: { initialUser
                     <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">
                       Chưa kích hoạt
                     </Badge>
+                  )}
+                </td>
+                <td className="px-4 py-4">
+                  {user.ezai_user_id && balanceMap[user.id] !== undefined ? (
+                    <span className="text-sm font-mono text-emerald-400">${balanceMap[user.id].toFixed(2)}</span>
+                  ) : (
+                    <span className="text-slate-600 text-xs">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-4">
+                  {totalCreditsMap[user.id] ? (
+                    <span className="text-sm font-mono text-amber-400">${totalCreditsMap[user.id].toFixed(2)}</span>
+                  ) : (
+                    <span className="text-slate-600 text-xs">$0.00</span>
                   )}
                 </td>
                 <td className="px-4 py-4">
