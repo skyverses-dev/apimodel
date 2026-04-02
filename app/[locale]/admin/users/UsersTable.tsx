@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Loader2, Zap, DollarSign, X, Pencil, Search, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react'
+import { Loader2, Zap, DollarSign, X, Pencil, Search, ChevronLeft, ChevronRight, Copy, Check, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const PLAN_BADGE: Record<string, string> = {
@@ -17,6 +17,13 @@ const PLAN_BADGE: Record<string, string> = {
   ultra: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
   one_time: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   none: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
+}
+
+const PLAN_BTN: Record<string, string> = {
+  starter: 'border-blue-500/40 text-blue-300 hover:bg-blue-500/20',
+  pro: 'border-purple-500/40 text-purple-300 hover:bg-purple-500/20',
+  max: 'border-orange-500/40 text-orange-300 hover:bg-orange-500/20',
+  ultra: 'border-pink-500/40 text-pink-300 hover:bg-pink-500/20',
 }
 
 const PER_PAGE = 15
@@ -76,6 +83,8 @@ export default function UsersTable({
   const [leverageEditId, setLeverageEditId] = useState<string | null>(null)
   const [leverageValue, setLeverageValue] = useState('')
   const [leverageLoading, setLeverageLoading] = useState(false)
+  const [planUserId, setPlanUserId] = useState<string | null>(null)
+  const [planLoading, setPlanLoading] = useState(false)
 
   // Search & pagination
   const [search, setSearch] = useState('')
@@ -178,6 +187,26 @@ export default function UsersTable({
       toast.error(err instanceof Error ? err.message : 'Lỗi cập nhật đòn bẩy')
     } finally {
       setLeverageLoading(false)
+    }
+  }
+
+  async function activatePlan(userId: string, plan: string) {
+    setPlanLoading(true)
+    try {
+      const res = await fetch('/api/admin/users/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, plan }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      toast.success(data.message || `Đã kích hoạt gói ${plan.toUpperCase()}!`)
+      setPlanUserId(null)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi kích hoạt gói')
+    } finally {
+      setPlanLoading(false)
     }
   }
 
@@ -426,6 +455,45 @@ export default function UsersTable({
                             >
                               <DollarSign size={12} className="mr-1" />
                               Nạp credit
+                            </Button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Nạp gói */}
+                      {user.ezai_user_id && (
+                        <>
+                          {planUserId === user.id ? (
+                            <div className="flex items-center gap-1">
+                              {(['starter', 'pro', 'max', 'ultra'] as const).map(p => (
+                                <button
+                                  key={p}
+                                  onClick={() => activatePlan(user.id, p)}
+                                  disabled={planLoading}
+                                  className={`h-7 px-2 text-[11px] font-medium rounded border transition-colors ${
+                                    planLoading
+                                      ? 'opacity-50 cursor-not-allowed border-white/10 text-slate-500'
+                                      : PLAN_BTN[p]
+                                  }`}
+                                >
+                                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setPlanUserId(null)}
+                                className="text-slate-500 hover:text-white transition-colors ml-0.5"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => setPlanUserId(user.id)}
+                              className="bg-blue-600/80 hover:bg-blue-600 h-7 text-xs px-3"
+                            >
+                              <Crown size={12} className="mr-1" />
+                              Nạp gói
                             </Button>
                           )}
                         </>
