@@ -191,6 +191,10 @@ export default function UsersTable({
   }
 
   async function activatePlan(userId: string, plan: string) {
+    const user = users.find(u => u.id === userId)
+    const confirmed = window.confirm(`Xác nhận kích hoạt gói ${plan.toUpperCase()} cho ${user?.email || userId}?`)
+    if (!confirmed) return
+
     setPlanLoading(true)
     try {
       const res = await fetch('/api/admin/users/plan', {
