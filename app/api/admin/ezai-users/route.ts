@@ -19,22 +19,34 @@ export async function GET(request: NextRequest) {
         const limit = Math.min(Number(request.nextUrl.searchParams.get('limit')) || 20, 100)
         const search = request.nextUrl.searchParams.get('search') || ''
 
-        const result = await ezai.listUsers(page, limit)
-
-        // Client-side search filter (EzAI API doesn't support search)
-        let filtered = result.users
         if (search) {
+            // When searching, fetch all users to ensure we can find matches across pages
             const q = search.toLowerCase()
-            filtered = result.users.filter(u =>
+            const allResult = await ezai.listUsers(1, 200)
+            const filtered = allResult.users.filter(u =>
                 u.email?.toLowerCase().includes(q) ||
                 u.name?.toLowerCase().includes(q) ||
                 u.id?.toLowerCase().includes(q)
             )
+
+            // Apply pagination on filtered results
+            const start = (page - 1) * limit
+            const paged = filtered.slice(start, start + limit)
+
+            return NextResponse.json({
+                users: paged,
+                total: filtered.length,
+                page,
+                limit,
+            })
         }
 
+        // No search — normal paginated fetch
+        const result = await ezai.listUsers(page, limit)
+
         return NextResponse.json({
-            users: filtered,
-            total: search ? filtered.length : result.total,
+            users: result.users,
+            total: result.total,
             page,
             limit,
         })

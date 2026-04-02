@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
 import { EzaiUser, EzaiUsageLog } from '@/types'
 import { Card, CardContent } from '@/components/ui/card'
@@ -156,9 +157,11 @@ function UsagePanel({ ezaiUserId }: { ezaiUserId: string }) {
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function EzaiUsersPage() {
+    const searchParams = useSearchParams()
+    const initialSearch = searchParams.get('search') || ''
     const [page, setPage] = useState(1)
-    const [search, setSearch] = useState('')
-    const [searchInput, setSearchInput] = useState('')
+    const [search, setSearch] = useState(initialSearch)
+    const [searchInput, setSearchInput] = useState(initialSearch)
     const [expanded, setExpanded] = useState<Record<string, boolean>>({})
     const limit = 20
 
