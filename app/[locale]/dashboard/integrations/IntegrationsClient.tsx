@@ -307,6 +307,16 @@ function ClineGuide({ apiKey, aiBase }: Props) {
 
 /* ─── Claude Code Guide ──────────────────────── */
 function ClaudeCodeGuide({ apiKey, aiBase }: Props) {
+  const settingsJson = `{
+  "env": {
+    "ANTHROPIC_API_KEY": "${apiKey}",
+    "ANTHROPIC_BASE_URL": "${aiBase}/",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6",
+    "API_TIMEOUT_MS": "200000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  }
+}`
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -320,13 +330,49 @@ function ClaudeCodeGuide({ apiKey, aiBase }: Props) {
         <div className="flex items-center gap-3"><StepNumber n={2} /><h4 className="text-white font-medium">Restart terminal & dùng</h4></div>
         <div className="ml-10"><CodeBlock lang="bash" code={`source ~/.bashrc  # or ~/.zshrc\nclaude`} /></div>
       </div>
-      <details className="group ml-10">
+      <details className="group ml-10" open>
         <summary className="cursor-pointer text-sm text-slate-400 hover:text-white transition-colors flex items-center gap-2">
-          <ChevronRight size={14} className="group-open:rotate-90 transition-transform" />Cài đặt thủ công
+          <ChevronRight size={14} className="group-open:rotate-90 transition-transform" />Cài đặt thủ công (settings.json)
         </summary>
-        <div className="mt-3 space-y-3">
-          <CodeBlock lang="bash" code={`export ANTHROPIC_BASE_URL="${aiBase}"\nexport ANTHROPIC_API_KEY="${apiKey}"`} />
-          <CodeBlock lang="~/.claude/settings.json" code={`{\n  "env": {\n    "ANTHROPIC_BASE_URL": "${aiBase}",\n    "ANTHROPIC_API_KEY": "${apiKey}"\n  },\n  "disableLoginPrompt": true\n}`} />
+        <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <p className="text-sm text-slate-400">Thêm vào <code className="text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded">~/.claude/settings.json</code>:</p>
+            <CodeBlock lang="~/.claude/settings.json" code={settingsJson} />
+          </div>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 space-y-2">
+            <p className="text-sm text-blue-200 font-medium">📋 Giải thích các biến:</p>
+            <div className="grid gap-1.5 text-xs text-slate-400">
+              <div className="flex gap-2">
+                <code className="text-cyan-300 shrink-0">ANTHROPIC_BASE_URL</code>
+                <span>— Endpoint API proxy</span>
+              </div>
+              <div className="flex gap-2">
+                <code className="text-cyan-300 shrink-0">ANTHROPIC_DEFAULT_OPUS_MODEL</code>
+                <span>— Model mặc định khi chọn Opus</span>
+              </div>
+              <div className="flex gap-2">
+                <code className="text-cyan-300 shrink-0">ANTHROPIC_DEFAULT_SONNET_MODEL</code>
+                <span>— Model mặc định khi chọn Sonnet</span>
+              </div>
+              <div className="flex gap-2">
+                <code className="text-cyan-300 shrink-0">API_TIMEOUT_MS</code>
+                <span>— Timeout 200s, tránh bị ngắt khi xử lý nặng</span>
+              </div>
+              <div className="flex gap-2">
+                <code className="text-cyan-300 shrink-0">CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC</code>
+                <span>— Tắt telemetry, tiết kiệm quota</span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-400">Hoặc export trực tiếp trong terminal:</p>
+            <CodeBlock lang="bash" code={`export ANTHROPIC_API_KEY="${apiKey}"
+export ANTHROPIC_BASE_URL="${aiBase}/"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus-4-6"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet-4-6"
+export API_TIMEOUT_MS="200000"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"`} />
+          </div>
         </div>
       </details>
     </div>
