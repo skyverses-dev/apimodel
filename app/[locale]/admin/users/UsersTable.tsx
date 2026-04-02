@@ -6,6 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Zap, DollarSign, X, Pencil } from 'lucide-react'
 
+const PLAN_BADGE: Record<string, string> = {
+  starter: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+  pro: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+  max: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  ultra: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
+  one_time: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  none: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
+}
+
 interface UserRow {
   id: string
   name: string | null
@@ -18,7 +27,7 @@ interface UserRow {
   created_at: string
 }
 
-export default function UsersTable({ initialUsers, exchangeRate, balanceMap, totalCreditsMap }: { initialUsers: UserRow[]; exchangeRate: number; balanceMap: Record<string, number>; totalCreditsMap: Record<string, number> }) {
+export default function UsersTable({ initialUsers, exchangeRate, balanceMap, totalCreditsMap, planMap }: { initialUsers: UserRow[]; exchangeRate: number; balanceMap: Record<string, number>; totalCreditsMap: Record<string, number>; planMap: Record<string, string> }) {
   const [users, setUsers] = useState(initialUsers)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [topupUserId, setTopupUserId] = useState<string | null>(null)
@@ -110,7 +119,7 @@ export default function UsersTable({ initialUsers, exchangeRate, balanceMap, tot
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/10">
-            {['User', 'Email', 'Mã user', '2BRAIN', 'Credit', 'Tổng nạp', 'Đòn bẩy', 'Ngày tạo', ''].map(h => (
+            {['User', 'Email', 'Mã user', '2BRAIN', 'Plan', 'Credit', 'Tổng nạp', 'Đòn bẩy', 'Ngày tạo', ''].map(h => (
               <th key={h} className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wider">{h}</th>
             ))}
           </tr>
@@ -118,7 +127,7 @@ export default function UsersTable({ initialUsers, exchangeRate, balanceMap, tot
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan={9} className="text-center py-12 text-slate-500">
+              <td colSpan={10} className="text-center py-12 text-slate-500">
                 Chưa có người dùng nào
               </td>
             </tr>
@@ -156,6 +165,20 @@ export default function UsersTable({ initialUsers, exchangeRate, balanceMap, tot
                       Chưa kích hoạt
                     </Badge>
                   )}
+                </td>
+                <td className="px-4 py-4">
+                  {(() => {
+                    const plan = planMap[user.id] || ''
+                    if (!plan || !user.ezai_user_id) return <span className="text-slate-600 text-xs">—</span>
+                    const planLower = plan.toLowerCase()
+                    const badgeClass = PLAN_BADGE[planLower] || PLAN_BADGE['none']
+                    const label = planLower === 'none' ? 'Free' : planLower === 'one_time' ? 'One-time' : plan.charAt(0).toUpperCase() + plan.slice(1)
+                    return (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeClass}`}>
+                        {label}
+                      </span>
+                    )
+                  })()}
                 </td>
                 <td className="px-4 py-4">
                   {user.ezai_user_id && balanceMap[user.id] !== undefined ? (

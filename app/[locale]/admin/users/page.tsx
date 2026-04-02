@@ -24,14 +24,16 @@ export default async function AdminUsersPage() {
     updated_at: p.updated_at.toISOString(),
   }))
 
-  // Fetch balances from EzAPI for all activated users
+  // Fetch balances + plan_type from EzAPI for all activated users
   const balanceMap: Record<string, number> = {}
+  const planMap: Record<string, string> = {}
   const activatedUsers = profiles.filter(p => p.ezai_user_id)
   await Promise.allSettled(
     activatedUsers.map(async (p) => {
       try {
         const ezUser = await ezai.getUser(p.ezai_user_id!)
         balanceMap[p._id.toString()] = ezUser.balance
+        planMap[p._id.toString()] = ezUser.plan_type || 'none'
       } catch {
         // silently skip — user might not exist on EzAPI
       }
@@ -72,7 +74,7 @@ export default async function AdminUsersPage() {
 
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0">
-          <UsersTable initialUsers={usersWithEmail} exchangeRate={exchangeRate} balanceMap={balanceMap} totalCreditsMap={totalCreditsMap} />
+          <UsersTable initialUsers={usersWithEmail} exchangeRate={exchangeRate} balanceMap={balanceMap} totalCreditsMap={totalCreditsMap} planMap={planMap} />
         </CardContent>
       </Card>
     </div>
