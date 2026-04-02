@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -65,6 +67,7 @@ export default function UsersTable({
   totalCreditsMap: Record<string, number>
   planMap: Record<string, string>
 }) {
+  const { locale } = useParams<{ locale: string }>()
   const [users, setUsers] = useState(initialUsers)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [topupUserId, setTopupUserId] = useState<string | null>(null)
@@ -259,9 +262,13 @@ export default function UsersTable({
                   <td className="px-4 py-4">
                     {user.ezai_user_id ? (
                       <div className="flex items-center gap-0.5">
-                        <code className="text-[11px] text-cyan-300 bg-cyan-900/20 px-1.5 py-0.5 rounded font-mono truncate max-w-[100px]" title={user.ezai_user_id}>
+                        <Link
+                          href={`/${locale}/admin/ezai-users?search=${encodeURIComponent(user.ezai_user_id)}`}
+                          className="text-[11px] text-cyan-300 bg-cyan-900/20 px-1.5 py-0.5 rounded font-mono truncate max-w-[100px] hover:bg-cyan-800/30 hover:text-cyan-200 transition-colors cursor-pointer"
+                          title={`Xem chi tiết: ${user.ezai_user_id}`}
+                        >
                           {user.ezai_user_id}
-                        </code>
+                        </Link>
                         <CopyButton text={user.ezai_user_id} />
                       </div>
                     ) : (
