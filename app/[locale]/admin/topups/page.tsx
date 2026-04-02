@@ -13,11 +13,17 @@ export default async function AdminTopupsPage() {
 
   const [topups, users] = await Promise.all([
     TopupRequest.find().sort({ created_at: -1 }).lean(),
-    User.find({ role: 'user' }).select('_id name').lean(),
+    User.find({ role: 'user' }).select('_id name email ezai_user_id').lean(),
   ])
 
-  const userMap: Record<string, string> = {}
-  users.forEach(u => { userMap[u._id.toString()] = u.name || u._id.toString().slice(0, 8) })
+  const userMap: Record<string, { name: string; email: string; ezai_user_id: string | null }> = {}
+  users.forEach(u => {
+    userMap[u._id.toString()] = {
+      name: u.name || u._id.toString().slice(0, 8),
+      email: u.email || '',
+      ezai_user_id: u.ezai_user_id || null,
+    }
+  })
 
   const serializedTopups = topups.map(t => ({
     id: t._id.toString(),

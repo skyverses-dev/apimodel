@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ezai } from '@/lib/ezai/client'
 import UsersTable from './UsersTable'
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ search?: string }> }) {
+  const { search: initialSearch } = await searchParams
   const session = await getSession()
   if (!session) return null
 
@@ -74,7 +75,7 @@ export default async function AdminUsersPage() {
 
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-0">
-          <UsersTable initialUsers={usersWithEmail} exchangeRate={exchangeRate} balanceMap={balanceMap} totalCreditsMap={totalCreditsMap} planMap={planMap} />
+          <UsersTable initialUsers={usersWithEmail} exchangeRate={exchangeRate} balanceMap={balanceMap} totalCreditsMap={totalCreditsMap} planMap={planMap} initialSearch={initialSearch} />
         </CardContent>
       </Card>
     </div>

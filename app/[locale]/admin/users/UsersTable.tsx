@@ -66,13 +66,14 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export default function UsersTable({
-  initialUsers, exchangeRate, balanceMap, totalCreditsMap, planMap,
+  initialUsers, exchangeRate, balanceMap, totalCreditsMap, planMap, initialSearch,
 }: {
   initialUsers: UserRow[]
   exchangeRate: number
   balanceMap: Record<string, number>
   totalCreditsMap: Record<string, number>
   planMap: Record<string, string>
+  initialSearch?: string
 }) {
   const { locale } = useParams<{ locale: string }>()
   const [users, setUsers] = useState(initialUsers)
@@ -87,8 +88,8 @@ export default function UsersTable({
   const [planLoading, setPlanLoading] = useState(false)
 
   // Search & pagination
-  const [search, setSearch] = useState('')
-  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState(initialSearch || '')
+  const [searchInput, setSearchInput] = useState(initialSearch || '')
   const [page, setPage] = useState(1)
 
   const vndValue = parseFloat(topupAmount) || 0
