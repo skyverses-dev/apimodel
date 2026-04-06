@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     const exchangeRate = settings?.exchange_rate || 26000
     const leverage = profile.leverage || settings?.user_leverage || 30
-    const minTopup = settings?.min_topup_vnd || 50000
+    const minTopup = settings?.min_topup_vnd || 100000
 
     // Min amount check (only for credit, not plan)
     if (!isPlan && vnd_amount < minTopup) {

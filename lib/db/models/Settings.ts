@@ -31,7 +31,7 @@ const SettingsSchema = new Schema<ISettings>(
         bank_name: { type: String, default: '' },
         bank_holder: { type: String, default: '' },
         bank_bin: { type: String, default: '' },
-        min_topup_vnd: { type: Number, default: 50000 },
+        min_topup_vnd: { type: Number, default: 100000 },
         ai_base_url: { type: String, default: 'https://ezaiapi.com' },
         plan_starter_vnd: { type: Number, default: 299000 },
         plan_pro_vnd: { type: Number, default: 599000 },

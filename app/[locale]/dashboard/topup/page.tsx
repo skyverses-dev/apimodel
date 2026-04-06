@@ -262,7 +262,7 @@ export default function TopupPage() {
   const vnd = Number(amount) || 0
   const usd = settings ? vndToUsd(vnd, settings.exchange_rate) : 0
   const credit = settings ? usdToCredit(usd, settings.user_leverage) : 0
-  const minVnd = settings?.min_topup_vnd || 50000
+  const minVnd = settings?.min_topup_vnd || 100000
 
   const planPrice = (plan: string) => {
     if (!settings) return 0
