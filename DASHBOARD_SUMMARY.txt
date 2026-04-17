@@ -1,0 +1,331 @@
+===============================================================================
+                    USER USAGE DASHBOARD - FILE SUMMARY
+===============================================================================
+
+ANALYSIS DATE: 2026-04-13
+CODEBASE: apimodel (Next.js + React + TypeScript)
+
+===============================================================================
+                             FILES FOUND (9 FILES)
+===============================================================================
+
+COMPONENTS (4 files)
+─────────────────────────────────────────────────────────────────────────────
+1. components/dashboard/UsageStats.tsx
+   - Main display component for usage statistics
+   - 382 lines
+   - Shows: Plan info, daily limits, balance, transactions
+   - Sections: Hero card, 4 stat cards, rate limits, transaction table
+
+2. components/dashboard/UsageHistory.tsx
+   - Paginated table of individual API request logs
+   - 227 lines
+   - Features: Pagination (10/20/50/100 per page), token formatting
+   - Displays: timestamp, model, path, tokens, cache, cost, status code
+
+3. components/dashboard/LiveStats.tsx
+   - Compact widget version of UsageStats
+   - 37 lines
+   - Used in sidebars and other dashboards
+   - 30-second auto-refresh
+
+4. components/dashboard/AdminUsageTable.tsx
+   - Admin-only table showing all users' usage stats
+   - 149 lines
+   - Columns: name, email, balance, plan, daily usage, expiration
+   - Color-coded progress bars (red 90%+, yellow 70%+)
+
+PAGES (2 files)
+─────────────────────────────────────────────────────────────────────────────
+5. app/[locale]/dashboard/page.tsx
+   - Main user dashboard page
+   - Fetches /api/usage (30s refresh) and /api/usage/history (60s refresh)
+   - Renders UsageStats + UsageHistory components
+   - Shows "no plan" warning if plan_type === 'none'
+   - Vietnamese UI labels
+
+6. app/[locale]/dashboard/usage/page.tsx
+   - Simple redirect to main dashboard
+   - Uses next/navigation redirect
+
+API ENDPOINTS (3 files)
+─────────────────────────────────────────────────────────────────────────────
+7. app/api/usage/route.ts
+   - GET endpoint for user's complete usage data
+   - Returns: UsageData interface
+   - Data sources:
+     • EzAI API (getUser, getTransactions, getAllUsage)
+     • MongoDB TopupRequest collection
+   - Computes spending/request counts from usage logs
+   - 100 lines
+
+8. app/api/usage/history/route.ts
+   - GET endpoint for paginated usage logs
+   - Query params: page (default 1), limit (default 20, max 100)
+   - Returns: usage[], total, page, limit
+   - Fetches all records from EzAI, paginates on client
+   - 43 lines
+
+9. app/api/admin/stats/route.ts
+   - GET endpoint for admin user statistics (admin-only)
+   - Returns: stats[] of AdminUserStat, total count
+   - Merges MongoDB users with EzAI user data
+   - Sorts by daily_used descending
+   - 57 lines
+
+TYPES (1 file)
+─────────────────────────────────────────────────────────────────────────────
+10. types/index.ts
+    - Contains all TypeScript interfaces
+    - Key interfaces: UsageData, EzaiTransaction, EzaiUsageLog, AdminUserStat
+
+===============================================================================
+                           DATA FIELDS DISPLAYED
+===============================================================================
+
+USER DASHBOARD (Regular Users)
+─────────────────────────────────────────────────────────────────────────────
+1. balance (number)
+   - Main account balance in credits
+   - Source: EzAI API
+   - Display: Balance stat card, Plan hero card
+   - Color: Green if positive, Red if negative
+
+2. plan_type (string)
+   - Current plan type
+   - Values: starter, pro, max, ultra, one_time, none
+   - Source: EzAI API
+   - Display: Plan badge with color coding
+
+3. daily_limit (number)
+   - Daily free credits limit (resets every 5h UTC)
+   - Source: EzAI API
+   - Display: Free Credits box, Rate limits section
+
+4. daily_used (number)
+   - Credits used in current 5-hour cycle
+   - Source: EzAI API
+   - Display: Free Credits box, Progress bar
+
+5. plan_expires_at (string | null)
+   - Plan expiration date
+   - Source: EzAI API
+   - Display: Expiration badge in hero card
+
+6. spending_today (number)
+   - Total credits spent today
+   - Source: EzAI usage logs (calculated server-side)
+   - Display: Spending Today stat card
+   - Format: Fixed to 4 decimal places
+
+7. requests_today (number)
+   - Number of API requests made today
+   - Source: EzAI usage logs (counted server-side)
+   - Display: Requests Today stat card, Daily requests limit
+
+8. spending_30d (number)
+   - Total credits spent in last 30 days
+   - Source: EzAI usage logs (calculated server-side)
+   - Display: Spending (30 days) stat card
+   - Format: Fixed to 2 decimal places
+
+9. transactions[] (Array<EzaiTransaction>)
+   - Recent account transactions
+   - Source: EzAI API (limited to 20 most recent)
+   - Display: Transactions table
+   - Fields per transaction:
+     • date (created_at)
+     • type (topup, plan_activate, user_create, user_deactivate, plan_deactivate)
+     • amount (with +/- indicator)
+     • description (or failure_reason)
+     • status (success, failed, completed, error)
+
+ADMIN DASHBOARD (Admin Users Only)
+─────────────────────────────────────────────────────────────────────────────
+For each user, displays:
+- name, email
+- balance
+- plan_type (with badge)
+- daily_used / daily_limit (with progress bar)
+- plan_expires_at (days until expiration)
+- Sorting: by daily_used (descending)
+- Color coding: 90%+ red, 70%+ yellow, <70% purple
+
+USAGE HISTORY TABLE
+─────────────────────────────────────────────────────────────────────────────
+Per request log:
+- created_at → Formatted timestamp (vi-VN locale)
+- model → Model name (Claude, GPT-4, etc.)
+- request_path → API endpoint called
+- input_tokens → Input token count (formatted K/M)
+- output_tokens → Output token count (formatted K/M)
+- cache_read_tokens / cache_write_tokens → Cache stats
+- cost → Cost in credits (6 decimal places)
+- status_code → HTTP status (green if 200, red otherwise)
+
+===============================================================================
+                             DATA SOURCES
+===============================================================================
+
+EzAI API
+─────────────────────────────────────────────────────────────────────────────
+- ezai.getUser() → balance, plan_type, daily_limit, daily_used, plan_expires_at
+- ezai.getTransactions() → transactions array
+- ezai.getAllUsage() → usage logs for spending/request calculation
+- ezai.listUsers() → all users (admin only)
+
+MongoDB Collections
+─────────────────────────────────────────────────────────────────────────────
+- User collection → user profile data
+- TopupRequest collection → monthly top-up history (status='approved')
+
+Server-Side Calculations
+─────────────────────────────────────────────────────────────────────────────
+- spending_today → Sum of cost from usage logs where created_at >= today start
+- requests_today → Count of usage logs where created_at >= today start
+- spending_30d → Sum of cost from usage logs where created_at >= 30 days ago
+
+===============================================================================
+                             API ENDPOINTS
+===============================================================================
+
+GET /api/usage
+─────────────────────────────────────────────────────────────────────────────
+Request: None (uses session for authentication)
+Response: UsageData {
+  balance: number
+  plan_type: string
+  daily_limit: number
+  daily_used: number
+  plan_expires_at: string | null
+  transactions: EzaiTransaction[]
+  monthly_topup_vnd: number
+  monthly_topup_credit: number
+  spending_today: number
+  requests_today: number
+  spending_30d: number
+}
+Refresh Rate: 30 seconds (SWR polling)
+Auth: Required (session)
+
+GET /api/usage/history?page=1&limit=20
+─────────────────────────────────────────────────────────────────────────────
+Query Params:
+  - page: number (default 1, min 1)
+  - limit: number (default 20, min 5, max 100)
+Response: {
+  usage: EzaiUsageLog[]
+  total: number
+  page: number
+  limit: number
+}
+Refresh Rate: 60 seconds (SWR polling)
+Auth: Required (session)
+
+GET /api/admin/stats
+─────────────────────────────────────────────────────────────────────────────
+Request: None
+Response: {
+  stats: AdminUserStat[]
+  total: number
+}
+Refresh Rate: 30 seconds (SWR polling)
+Auth: Required (admin role only)
+
+===============================================================================
+                           UI/UX ELEMENTS
+===============================================================================
+
+Plan Badge Colors
+─────────────────────────────────────────────────────────────────────────────
+- Starter    → Blue (#3b82f6)
+- Pro        → Purple (#a855f7)
+- Max        → Orange (#f97316)
+- Ultra      → Pink (#ec4899)
+- One-time   → Gray (#64748b)
+- No Plan    → Dark Gray (#6b7280)
+
+Usage Percentage Bar Colors
+─────────────────────────────────────────────────────────────────────────────
+- 0-50%      → Green gradient (emerald-500)
+- 50-70%     → Pink to Purple gradient
+- 70-90%     → Yellow (#fbbf24)
+- 90%+       → Red (#ef4444)
+
+Transaction Type Badges
+─────────────────────────────────────────────────────────────────────────────
+- topup               → Green "Nạp tiền" (Deposit)
+- plan_activate       → Purple "Kích hoạt" (Activate)
+- user_create         → Blue "Tài khoản" (Account)
+- user_deactivate     → Red "Tắt TK" (Deactivate)
+- plan_deactivate     → Orange "Huỷ gói" (Cancel)
+
+Model Color Coding (Usage History)
+─────────────────────────────────────────────────────────────────────────────
+- claude-3-5-sonnet   → Purple
+- claude-3-5-haiku    → Blue
+- claude-3-opus       → Pink
+- claude-sonnet-4     → Purple
+- claude-haiku-4      → Blue
+- gpt-4               → Green
+- gpt-3.5             → Teal
+- Others              → Slate Gray
+
+===============================================================================
+                          COMPONENT HIERARCHY
+===============================================================================
+
+DashboardPage (page.tsx)
+├── Header (title + refresh button)
+├── Warning (if plan_type === 'none')
+├── Loading skeletons
+├── Error message
+└── Content:
+    ├── UsageStats (main component)
+    │   ├── Plan Hero Card
+    │   ├── 4 Stat Cards
+    │   ├── Rate Limits Section
+    │   └── Transactions Table
+    └── UsageHistory (paginated table)
+        ├── Summary stats (total cost, tokens, requests)
+        └── Request log table with pagination
+
+AdminUsageTable
+├── Header (title + refresh button)
+├── Loading skeletons
+├── Error message
+└── User stats table
+    └── For each user:
+        ├── Name + email
+        ├── Balance badge
+        ├── Plan badge
+        ├── Daily usage progress
+        └── Expiration countdown
+
+===============================================================================
+                            FILE LOCATIONS
+===============================================================================
+
+ALL FILES SAVED TO PROJECT ROOT:
+- app/[locale]/dashboard/page.tsx
+- app/[locale]/dashboard/usage/page.tsx
+- app/api/usage/route.ts
+- app/api/usage/history/route.ts
+- app/api/admin/stats/route.ts
+- components/dashboard/UsageStats.tsx
+- components/dashboard/UsageHistory.tsx
+- components/dashboard/LiveStats.tsx
+- components/dashboard/AdminUsageTable.tsx
+- types/index.ts (partial - type definitions)
+
+ADDITIONAL DOCUMENTATION:
+- DASHBOARD_ANALYSIS_COMPLETE.md - Full source code and detailed analysis
+- DASHBOARD_SUMMARY.txt - This file
+
+===============================================================================
+                              GENERATED
+===============================================================================
+Date: 2026-04-13
+Analysis Tool: Claude Code
+Project: apimodel
+Status: ✅ Complete - All 9 related files found and documented
